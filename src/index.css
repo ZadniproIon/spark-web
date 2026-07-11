@@ -101,9 +101,10 @@ a {
 .sidebar-action span:first-child { display: grid; place-items: center; width: 20px; height: 20px; }
 .sidebar-action svg { width: 20px; height: 20px; }
 .sidebar-reopen { position: fixed; top: 16px; left: 16px; z-index: 5; background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-1); }
-.notes-board { flex: 1; min-width: 0; padding: 64px clamp(24px, 8vw, 117px); overflow: auto; }
-.notes-grid { columns: 3 300px; column-gap: 16px; max-width: 964px; }
-.note-card { min-height: 104px; display: flex; flex-direction: column; justify-content: center; gap: 8px; width: 100%; margin: 0 0 16px; break-inside: avoid; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); color: var(--text-primary); cursor: pointer; box-shadow: none; transition: box-shadow 140ms ease, transform 140ms ease; }
+.notes-board { flex: 1; min-width: 0; padding: 48px clamp(16px, 4vw, 64px); overflow: auto; }
+.notes-masonry { display: flex; gap: 20px; align-items: flex-start; }
+.notes-masonry__col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.note-card { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); color: var(--text-primary); cursor: pointer; box-shadow: none; transition: box-shadow 140ms ease, transform 140ms ease; }
 .note-card:hover { box-shadow: var(--shadow-1); transform: translateY(-1px); }
 .note-card--pinned { border-color: var(--flame); }
 .note-card__content { font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
@@ -114,5 +115,4 @@ a {
 .note-card__context-layer { position: fixed; inset: 0; z-index: 1000; }
 .notes-empty { display: grid; place-items: center; gap: 8px; min-height: 300px; color: var(--text-secondary); text-align: center; }
 .notes-empty button { color: var(--flame); font-size: 15px; }
-@media (max-width: 1150px) { .notes-grid { columns: 2 300px; } }
-@media (max-width: 760px) { .sidebar { width: 224px; flex-basis: 224px; } .app-shell--sidebar-closed .sidebar { margin-left: -224px; } .notes-board { padding: 88px 20px 32px; } .notes-grid { columns: 1; } }
+@media (max-width: 760px) { .sidebar { width: 224px; flex-basis: 224px; } .app-shell--sidebar-closed .sidebar { margin-left: -224px; } .notes-board { padding: 88px 20px 32px; } }

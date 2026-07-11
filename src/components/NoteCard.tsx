@@ -26,7 +26,7 @@ export function NoteCard({ note }: { note: Note }) {
   const [showPlayer, setShowPlayer] = useState(false);
   const handleContextMenu = useCallback((e: React.MouseEvent) => { e.preventDefault(); setContextPos({ x: e.clientX, y: e.clientY }); setShowContext(true); }, []);
   return <>
-    <article className={`note-card ${note.isPinned ? 'note-card--pinned' : ''}`} onContextMenu={handleContextMenu} onClick={() => note.type === 'voice' ? setShowPlayer(true) : setShowEdit(true)}>
+    <article className={`note-card ${note.isPinned ? 'note-card--pinned' : ''}`} onContextMenu={handleContextMenu}>
       <p className="note-card__content">{note.type === 'voice' ? <><Mic size={16} aria-hidden="true" /> {note.content}</> : renderContentWithLinks(note.content)}</p>
       <footer className="note-card__meta"><time>{formatNoteDisplay(note)}</time>{note.isPinned && <span><PinIcon size={11} aria-hidden="true" /> Pinned</span>}</footer>
     </article>

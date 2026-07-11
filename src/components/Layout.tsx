@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Flame, GitFork, MessageCircle, Moon, PanelLeft, Plus, Trash2, UserRoundCog } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { NoteCard } from './NoteCard';
@@ -8,10 +8,35 @@ import { AuthModal } from './AuthModal';
 import { SettingsModal } from './SettingsModal';
 import { RecycleBinModal } from './RecycleBinModal';
 import { useNotes } from '../hooks/useNotes';
+import type { Note } from '../types/note';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 
 type ModalName = 'addNote' | 'voiceRecorder' | 'auth' | 'settings' | 'recycleBin';
+
+function useColumnCount(): number {
+  const [cols, setCols] = useState(() => {
+    const w = window.innerWidth;
+    if (w <= 760) return 1;
+    if (w <= 1150) return 2;
+    return 3;
+  });
+  useMemo(() => {
+    const onResize = () => {
+      const w = window.innerWidth;
+      setCols(w <= 760 ? 1 : w <= 1150 ? 2 : 3);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return cols;
+}
+
+function distributeNotes(notes: Note[], cols: number): Note[][] {
+  const columns: Note[][] = Array.from({ length: cols }, () => []);
+  notes.forEach((note, i) => columns[i % cols].push(note));
+  return columns;
+}
 
 export function Layout() {
   const { state, dispatch } = useStore();
@@ -19,6 +44,8 @@ export function Layout() {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const colCount = useColumnCount();
+  const columns = useMemo(() => distributeNotes(notes, colCount), [notes, colCount]);
 
   const openModal = useCallback((modal: ModalName) => {
     dispatch({ type: 'OPEN_MODAL', payload: { modal } });
@@ -57,7 +84,13 @@ export function Layout() {
             <p>No notes yet</p><button onClick={() => openModal('addNote')}>Create your first note</button>
           </div>
         ) : (
-          <div className="notes-grid">{notes.map((note) => <NoteCard key={note.id} note={note} />)}</div>
+          <div className="notes-masonry">
+            {columns.map((col, ci) => (
+              <div key={ci} className="notes-masonry__col">
+                {col.map((note) => <NoteCard key={note.id} note={note} />)}
+              </div>
+            ))}
+          </div>
         )}
       </main>
 
