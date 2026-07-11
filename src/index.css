@@ -52,7 +52,6 @@ body {
 
 #root {
   min-height: 100vh;
-  display: flex;
 }
 
 button {
@@ -87,3 +86,33 @@ a {
   background: var(--border);
   border-radius: 3px;
 }
+
+.app-shell { min-height: 100vh; display: flex; background: var(--bg); }
+.sidebar { width: 275px; flex: 0 0 275px; padding: 16px; display: flex; flex-direction: column; gap: 24px; background: var(--bg); transition: margin-left 180ms ease; }
+.app-shell--sidebar-closed .sidebar { margin-left: -275px; }
+.sidebar__top { display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 600; }
+.brand svg { color: var(--flame); fill: var(--flame); }
+.panel-button, .sidebar-reopen { width: 42px; height: 42px; color: var(--text-primary); display: grid; place-items: center; border-radius: 8px; }
+.panel-button:hover, .sidebar-reopen:hover { background: var(--bg-card); }
+.sidebar__actions { display: grid; gap: 8px; }
+.sidebar-action { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); background: var(--bg-card); font-size: 16px; text-align: left; transition: box-shadow 140ms ease, transform 140ms ease; }
+.sidebar-action:hover { box-shadow: var(--shadow-1); transform: translateY(-1px); }
+.sidebar-action span:first-child { display: grid; place-items: center; width: 20px; height: 20px; }
+.sidebar-action svg { width: 20px; height: 20px; }
+.sidebar-reopen { position: fixed; top: 16px; left: 16px; z-index: 5; background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-1); }
+.notes-board { flex: 1; min-width: 0; padding: 64px clamp(24px, 8vw, 117px); overflow: auto; }
+.notes-grid { columns: 3 300px; column-gap: 16px; max-width: 964px; }
+.note-card { min-height: 104px; display: flex; flex-direction: column; justify-content: center; gap: 8px; width: 100%; margin: 0 0 16px; break-inside: avoid; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); color: var(--text-primary); cursor: pointer; box-shadow: none; transition: box-shadow 140ms ease, transform 140ms ease; }
+.note-card:hover { box-shadow: var(--shadow-1); transform: translateY(-1px); }
+.note-card--pinned { border-color: var(--flame); }
+.note-card__content { font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
+.note-card__content svg { width: 16px; vertical-align: -3px; margin-right: 4px; color: var(--flame); }
+.note-card__content a { color: var(--flame); text-decoration: underline; }
+.note-card__meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
+.note-card__meta span { display: inline-flex; align-items: center; gap: 4px; }
+.note-card__context-layer { position: fixed; inset: 0; z-index: 1000; }
+.notes-empty { display: grid; place-items: center; gap: 8px; min-height: 300px; color: var(--text-secondary); text-align: center; }
+.notes-empty button { color: var(--flame); font-size: 15px; }
+@media (max-width: 1150px) { .notes-grid { columns: 2 300px; } }
+@media (max-width: 760px) { .sidebar { width: 224px; flex-basis: 224px; } .app-shell--sidebar-closed .sidebar { margin-left: -224px; } .notes-board { padding: 88px 20px 32px; } .notes-grid { columns: 1; } }
