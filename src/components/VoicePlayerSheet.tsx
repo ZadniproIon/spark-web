@@ -9,6 +9,7 @@ interface VoicePlayerSheetProps {
 }
 
 function formatTime(seconds: number): string {
+  if (!isFinite(seconds) || isNaN(seconds) || seconds < 0) return '00:00';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
@@ -16,7 +17,7 @@ function formatTime(seconds: number): string {
 
 async function resolveUrl(url: string | null): Promise<string | null> {
   if (!url) return null;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url;
   const { data } = await supabase.storage
     .from(supabaseConfig.voiceBucket)
     .createSignedUrl(url, 60 * 60 * 24 * 365);
@@ -24,63 +25,186 @@ async function resolveUrl(url: string | null): Promise<string | null> {
 }
 
 export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDurationState] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+
+  const startTimeRef = useRef<number>(0);
+  const offsetRef = useRef<number>(0);
+  const animFrameRef = useRef<number | null>(null);
+  const isPlayingRef = useRef<boolean>(false);
+  const isSeekingRef = useRef<boolean>(false);
+  isPlayingRef.current = isPlaying;
+
+  const stopTimer = useCallback(() => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+  }, []);
+
+  const updateProgress = useCallback(() => {
+    if (audioCtxRef.current && isPlayingRef.current && audioBufferRef.current && !isSeekingRef.current) {
+      const elapsed = audioCtxRef.current.currentTime - startTimeRef.current + offsetRef.current;
+      const totalDur = audioBufferRef.current.duration;
+      if (elapsed >= totalDur) {
+        setCurrentTime(totalDur);
+        setIsPlaying(false);
+        offsetRef.current = 0;
+        stopTimer();
+        return;
+      }
+      setCurrentTime(elapsed);
+      animFrameRef.current = requestAnimationFrame(updateProgress);
+    }
+  }, [stopTimer]);
+
+  const stopSourceNode = useCallback(() => {
+    if (sourceNodeRef.current) {
+      try {
+        sourceNodeRef.current.onended = null;
+        sourceNodeRef.current.stop(0);
+        sourceNodeRef.current.disconnect();
+      } catch (_) {}
+      sourceNodeRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const playableUrl = await resolveUrl(note.audioUrl);
       if (cancelled || !playableUrl) return;
-      setLoading(false);
-      const audio = new Audio(playableUrl);
-      audio.addEventListener('loadedmetadata', () => setDurationState(audio.duration));
-      audio.addEventListener('timeupdate', () => setCurrentTime(audio.currentTime));
-      audio.addEventListener('ended', () => setIsPlaying(false));
-      audioRef.current = audio;
+
+      try {
+        const res = await fetch(playableUrl);
+        const arrayBuffer = await res.arrayBuffer();
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const ctx = new AudioCtx();
+        audioCtxRef.current = ctx;
+
+        const decoded = await ctx.decodeAudioData(arrayBuffer);
+        if (cancelled) return;
+
+        audioBufferRef.current = decoded;
+        setDuration(decoded.duration);
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed to load audio for playback:', err);
+        if (!cancelled) setLoading(false);
+      }
     })();
+
     return () => {
       cancelled = true;
-      audioRef.current?.pause();
+      stopTimer();
+      stopSourceNode();
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
     };
-  }, [note.audioUrl]);
+  }, [note.audioUrl, stopTimer, stopSourceNode]);
+
+  const playFrom = useCallback((targetOffset: number) => {
+    const ctx = audioCtxRef.current;
+    const buffer = audioBufferRef.current;
+    if (!ctx || !buffer) return;
+
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+
+    stopSourceNode();
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+
+    const clampedOffset = Math.max(0, Math.min(buffer.duration - 0.05, targetOffset));
+    offsetRef.current = clampedOffset;
+    startTimeRef.current = ctx.currentTime;
+
+    source.onended = () => {
+      if (isPlayingRef.current && !isSeekingRef.current) {
+        const elapsed = ctx.currentTime - startTimeRef.current + offsetRef.current;
+        if (elapsed >= buffer.duration - 0.1) {
+          setIsPlaying(false);
+          setCurrentTime(0);
+          offsetRef.current = 0;
+          stopTimer();
+        }
+      }
+    };
+
+    source.start(0, clampedOffset);
+    sourceNodeRef.current = source;
+    setIsPlaying(true);
+    stopTimer();
+    animFrameRef.current = requestAnimationFrame(updateProgress);
+  }, [stopSourceNode, stopTimer, updateProgress]);
+
+  const pauseAudio = useCallback(() => {
+    if (audioCtxRef.current && isPlaying) {
+      const elapsed = audioCtxRef.current.currentTime - startTimeRef.current + offsetRef.current;
+      offsetRef.current = Math.max(0, Math.min(duration, elapsed));
+      setCurrentTime(offsetRef.current);
+    }
+    stopSourceNode();
+    stopTimer();
+    setIsPlaying(false);
+  }, [isPlaying, duration, stopSourceNode, stopTimer]);
 
   const togglePlay = useCallback(() => {
-    if (!audioRef.current) return;
     if (isPlaying) {
-      audioRef.current.pause();
+      pauseAudio();
     } else {
-      audioRef.current.play();
+      if (currentTime >= duration - 0.1) {
+        playFrom(0);
+      } else {
+        playFrom(offsetRef.current);
+      }
     }
-    setIsPlaying(!isPlaying);
-  }, [isPlaying]);
+  }, [isPlaying, pauseAudio, playFrom, currentTime, duration]);
 
-  const seek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = Number(e.target.value);
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      setCurrentTime(time);
+  const handleSeekChange = useCallback((targetTime: number) => {
+    const clamped = Math.max(0, Math.min(duration, targetTime));
+    setCurrentTime(clamped);
+    offsetRef.current = clamped;
+  }, [duration]);
+
+  const handleSeekStart = useCallback(() => {
+    isSeekingRef.current = true;
+    stopTimer();
+  }, [stopTimer]);
+
+  const handleSeekEnd = useCallback((targetTime: number) => {
+    isSeekingRef.current = false;
+    const clamped = Math.max(0, Math.min(duration, targetTime));
+    offsetRef.current = clamped;
+    setCurrentTime(clamped);
+    if (isPlayingRef.current) {
+      playFrom(clamped);
     }
-  }, []);
+  }, [duration, playFrom]);
 
   const skipBack = useCallback(() => {
-    if (audioRef.current) {
-      const newTime = Math.max(0, audioRef.current.currentTime - 3);
-      audioRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
-    }
-  }, []);
+    const newTime = Math.max(0, currentTime - 3);
+    handleSeekEnd(newTime);
+  }, [handleSeekEnd, currentTime]);
 
   const skipForward = useCallback(() => {
-    if (audioRef.current) {
-      const newTime = audioRef.current.currentTime + 3;
-      audioRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
-    }
-  }, []);
+    const newTime = Math.min(duration, currentTime + 3);
+    handleSeekEnd(newTime);
+  }, [handleSeekEnd, currentTime, duration]);
+
+  const sliderPercent = duration > 0
+    ? Math.min(100, Math.max(0, (currentTime / duration) * 100))
+    : 0;
 
   return (
     <div
@@ -120,14 +244,21 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
             <input
               type="range"
               min={0}
-              max={duration || 0}
+              max={duration || 1}
+              step={0.01}
               value={currentTime}
-              onChange={seek}
+              onPointerDown={handleSeekStart}
+              onMouseDown={handleSeekStart}
+              onTouchStart={handleSeekStart}
+              onChange={(e) => handleSeekChange(Number(e.target.value))}
+              onPointerUp={(e) => handleSeekEnd(Number((e.target as HTMLInputElement).value))}
+              onMouseUp={(e) => handleSeekEnd(Number((e.target as HTMLInputElement).value))}
+              onTouchEnd={(e) => handleSeekEnd(Number((e.target as HTMLInputElement).value))}
               style={{
                 width: '100%',
                 height: 4,
                 appearance: 'none',
-                background: `linear-gradient(to right, var(--flame) ${(currentTime / (duration || 1)) * 100}%, var(--border) ${(currentTime / (duration || 1)) * 100}%)`,
+                background: `linear-gradient(to right, var(--flame) ${sliderPercent}%, var(--border) ${sliderPercent}%)`,
                 borderRadius: 2,
                 outline: 'none',
                 cursor: 'pointer',

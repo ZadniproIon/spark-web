@@ -95,7 +95,7 @@ export function Layout() {
       </main>
 
       {state.modal === 'addNote' && <AddNoteModal onClose={closeModal} />}
-      {state.modal === 'voiceRecorder' && <VoiceRecorder onSave={handleSaveVoice} onClose={closeModal} />}
+      {state.modal === 'voiceRecorder' && <AddNoteModal onClose={closeModal} initialMode="voice" />}
       {state.modal === 'auth' && <AuthModal onClose={closeModal} />}
       {state.modal === 'settings' && <SettingsModal onClose={closeModal} onOpenAuth={() => dispatch({ type: 'OPEN_MODAL', payload: { modal: 'auth' } })} />}
       {state.modal === 'recycleBin' && <RecycleBinModal onClose={closeModal} />}
