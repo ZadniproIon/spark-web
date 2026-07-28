@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Flame, GitFork, LayoutGrid, MessageCircle, Moon, PanelLeft, Plus, Square, Trash2, UserRoundCog } from 'lucide-react';
+import { Flame, PanelLeft, Plus, Search, Settings, Trash2 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { NoteCard } from './NoteCard';
 import { AddNoteModal } from './AddNoteModal';
@@ -8,8 +8,6 @@ import { SettingsModal } from './SettingsModal';
 import { RecycleBinModal } from './RecycleBinModal';
 import { SparkSearchBar } from './ui/SparkSearchBar';
 import { useNotes } from '../hooks/useNotes';
-import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../hooks/useTheme';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import type { Note } from '../types/note';
 
@@ -38,10 +36,9 @@ function distributeNotes(notes: Note[], cols: number): Note[][] {
 export function Layout() {
   const { state, dispatch } = useStore();
   const { notes } = useNotes();
-  const { user } = useAuth();
-  const { theme, setTheme } = useTheme();
-  const { layoutMode, setLayoutMode } = useLayoutMode();
+  const { layoutMode } = useLayoutMode();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showSearch, setShowSearch] = useState(() => Boolean(state.searchQuery));
 
   const colCount = useMasonryColumnCount();
   const columns = useMemo(() => distributeNotes(notes, colCount), [notes, colCount]);
@@ -52,16 +49,26 @@ export function Layout() {
 
   const closeModal = useCallback(() => dispatch({ type: 'CLOSE_MODAL' }), [dispatch]);
 
-  const toggleTheme = useCallback(() => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  }, [setTheme, theme]);
+  const handleToggleSearch = useCallback(() => {
+    if (!sidebarOpen) {
+      setSidebarOpen(true);
+      setShowSearch(true);
+    } else if (showSearch) {
+      setShowSearch(false);
+      if (state.searchQuery) {
+        dispatch({ type: 'SET_SEARCH', payload: '' });
+      }
+    } else {
+      setShowSearch(true);
+    }
+  }, [sidebarOpen, showSearch, state.searchQuery, dispatch]);
 
   return (
     <div className={`app-shell ${sidebarOpen ? '' : 'app-shell--sidebar-closed'}`}>
       <aside className="sidebar" aria-label="Primary navigation">
         <div className="sidebar__top">
           <div className="brand">
-            <Flame size={24} aria-hidden="true" />
+            <Flame size={24} strokeWidth={2} aria-hidden="true" />
             <span>Spark</span>
           </div>
           <button className="panel-button" onClick={() => setSidebarOpen(false)} aria-label="Collapse sidebar">
@@ -70,11 +77,18 @@ export function Layout() {
         </div>
         <nav className="sidebar__actions">
           <SidebarAction icon={<Plus />} label="New note" onClick={() => openModal('addNote')} />
+          <SidebarAction icon={<Search />} label="Search" onClick={handleToggleSearch} />
+          {showSearch && (
+            <div className="sidebar__search-wrapper">
+              <SparkSearchBar
+                value={state.searchQuery}
+                onChange={(q) => dispatch({ type: 'SET_SEARCH', payload: q })}
+                autoFocus
+              />
+            </div>
+          )}
           <SidebarAction icon={<Trash2 />} label="Recycle bin" onClick={() => openModal('recycleBin')} />
-          <SidebarAction icon={<UserRoundCog size={21} />} label="Account settings" onClick={() => openModal(user ? 'settings' : 'auth')} />
-          <SidebarAction icon={<Moon size={21} />} label="Theme" onClick={toggleTheme} />
-          <SidebarAction icon={<MessageCircle />} label="Send feedback" onClick={() => (window.location.href = 'mailto:?subject=Spark%20feedback')} />
-          <SidebarAction icon={<GitFork />} label="GitHub repository" onClick={() => window.open('https://github.com/', '_blank', 'noopener,noreferrer')} />
+          <SidebarAction icon={<Settings size={21} />} label="Settings" onClick={() => openModal('settings')} />
         </nav>
       </aside>
 
@@ -85,42 +99,6 @@ export function Layout() {
       )}
 
       <main className="notes-board">
-        <header className="notes-header">
-          <div className="notes-header__search">
-            <SparkSearchBar
-              value={state.searchQuery}
-              onChange={(q) => dispatch({ type: 'SET_SEARCH', payload: q })}
-            />
-          </div>
-
-          <div className="layout-switch" role="radiogroup" aria-label="Layout view mode">
-            <button
-              type="button"
-              className={`layout-switch__btn ${layoutMode === '1col' ? 'layout-switch__btn--active' : ''}`}
-              onClick={() => setLayoutMode('1col')}
-              title="1 Column View"
-              aria-label="1 Column View"
-              aria-checked={layoutMode === '1col'}
-              role="radio"
-            >
-              <Square size={16} aria-hidden="true" />
-              <span className="layout-switch__text">1 Column</span>
-            </button>
-            <button
-              type="button"
-              className={`layout-switch__btn ${layoutMode === 'masonry' ? 'layout-switch__btn--active' : ''}`}
-              onClick={() => setLayoutMode('masonry')}
-              title="Masonry View"
-              aria-label="Masonry View"
-              aria-checked={layoutMode === 'masonry'}
-              role="radio"
-            >
-              <LayoutGrid size={16} aria-hidden="true" />
-              <span className="layout-switch__text">Masonry</span>
-            </button>
-          </div>
-        </header>
-
         {notes.length === 0 ? (
           <div className="notes-empty">
             <p>{state.searchQuery ? 'No matching notes found' : 'No notes yet'}</p>

@@ -4,40 +4,32 @@ interface SparkSearchBarProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  autoFocus?: boolean;
+  className?: string;
 }
 
-export function SparkSearchBar({ value, onChange, placeholder = 'Search notes...' }: SparkSearchBarProps) {
+export function SparkSearchBar({
+  value,
+  onChange,
+  placeholder = 'Search...',
+  autoFocus,
+  className = 'sidebar-search-bar',
+}: SparkSearchBarProps) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        borderRadius: '18px',
-        border: '1px solid var(--border)',
-        background: 'var(--bg-card)',
-        padding: '8px 14px',
-        width: '100%',
-      }}
-    >
-      <Search size={16} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+    <div className={className}>
+      <Search size={20} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        style={{
-          flex: 1,
-          fontSize: 14,
-          color: 'var(--text-primary)',
-          background: 'transparent',
-          border: 'none',
-          outline: 'none',
-        }}
+        autoFocus={autoFocus}
       />
       {value && (
         <button
+          type="button"
           onClick={() => onChange('')}
+          aria-label="Clear search"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -49,7 +41,7 @@ export function SparkSearchBar({ value, onChange, placeholder = 'Search notes...
             color: 'var(--text-secondary)',
           }}
         >
-          <X size={14} />
+          <X size={16} />
         </button>
       )}
     </div>
