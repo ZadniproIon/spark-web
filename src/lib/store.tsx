@@ -1,10 +1,11 @@
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from 'react';
-import type { Note, ThemePreference, ModalType } from '../types/note';
+import type { Note, ThemePreference, LayoutMode, ModalType } from '../types/note';
 
 export interface AppState {
   notes: Note[];
   user: import('@supabase/supabase-js').User | null;
   theme: ThemePreference;
+  layoutMode: LayoutMode;
   haptics: boolean;
   isLoading: boolean;
   searchQuery: string;
@@ -19,6 +20,7 @@ type Action =
   | { type: 'DELETE_NOTE'; payload: string }
   | { type: 'SET_USER'; payload: import('@supabase/supabase-js').User | null }
   | { type: 'SET_THEME'; payload: ThemePreference }
+  | { type: 'SET_LAYOUT_MODE'; payload: LayoutMode }
   | { type: 'SET_HAPTICS'; payload: boolean }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_SEARCH'; payload: string }
@@ -34,10 +36,16 @@ function loadNotes(): Note[] {
   }
 }
 
+function loadLayoutMode(): LayoutMode {
+  const saved = localStorage.getItem('spark_layout_mode');
+  return saved === '1col' ? '1col' : 'masonry';
+}
+
 const initialState: AppState = {
   notes: loadNotes(),
   user: null,
   theme: (localStorage.getItem('theme') as ThemePreference) || 'system',
+  layoutMode: loadLayoutMode(),
   haptics: localStorage.getItem('haptics') !== 'false',
   isLoading: false,
   searchQuery: '',
@@ -74,6 +82,9 @@ function appReducer(state: AppState, action: Action): AppState {
     case 'SET_THEME':
       localStorage.setItem('theme', action.payload);
       return { ...state, theme: action.payload };
+    case 'SET_LAYOUT_MODE':
+      localStorage.setItem('spark_layout_mode', action.payload);
+      return { ...state, layoutMode: action.payload };
     case 'SET_HAPTICS':
       localStorage.setItem('haptics', String(action.payload));
       return { ...state, haptics: action.payload };

@@ -23,10 +23,10 @@ export function VoiceRecorder({ onSave, onClose }: VoiceRecorderProps) {
     start();
   }, [start]);
 
-  const handleStop = useCallback(() => {
-    const blob = stop();
-    if (blob) {
-      const url = URL.createObjectURL(blob);
+  const handleStop = useCallback(async () => {
+    const res = await stop();
+    if (res?.blob) {
+      const url = URL.createObjectURL(res.blob);
       setPreviewUrl(url);
     }
   }, [stop]);

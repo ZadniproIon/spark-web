@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
-import { X, Sun, Moon, Monitor, Trash2, LogOut, Mail, Lock } from 'lucide-react';
+import { X, Sun, Moon, Monitor, Trash2, LogOut, Mail, Lock, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
-import type { ThemePreference } from '../types/note';
+import { useLayoutMode } from '../hooks/useLayoutMode';
+import type { ThemePreference, LayoutMode } from '../types/note';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -72,6 +73,7 @@ function MenuItem({
 
 export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
   const { theme, setTheme } = useTheme();
+  const { layoutMode, setLayoutMode } = useLayoutMode();
   const { user, signOut } = useAuth();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteCountdown, setDeleteCountdown] = useState(10);
@@ -139,6 +141,29 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                 {themeOptions.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
+              </select>
+            }
+          />
+          <MenuItem
+            icon={<LayoutGrid size={16} />}
+            label="Note view layout"
+            trailing={
+              <select
+                value={layoutMode}
+                onChange={(e) => setLayoutMode(e.target.value as LayoutMode)}
+                style={{
+                  padding: '6px 10px',
+                  fontSize: 13,
+                  color: 'var(--text-primary)',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  outline: 'none',
+                }}
+              >
+                <option value="1col">1 Column</option>
+                <option value="masonry">Masonry</option>
               </select>
             }
           />

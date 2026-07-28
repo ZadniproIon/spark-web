@@ -19,6 +19,8 @@ export interface Note {
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 
+export type LayoutMode = '1col' | 'masonry';
+
 export type ModalType =
   | 'addNote'
   | 'voiceRecorder'
