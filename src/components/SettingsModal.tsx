@@ -193,7 +193,6 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       subtitle="Sync your notes across all your devices"
                       onClick={() => {
                         onOpenAuth();
-                        handleClose();
                       }}
                     />
                   ) : (

@@ -28,27 +28,27 @@ export function AuthModal({ onClose }: AuthModalProps) {
         setResetSent(true);
       } else if (isSignUp) {
         await signUpWithEmail(email, password);
-        onClose();
+        handleClose();
       } else {
         await signInWithEmail(email, password);
-        onClose();
+        handleClose();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
-  }, [isSignUp, isForgotPassword, email, password, signInWithEmail, signUpWithEmail, sendPasswordReset, onClose]);
+  }, [isSignUp, isForgotPassword, email, password, signInWithEmail, signUpWithEmail, sendPasswordReset, handleClose]);
 
   const handleGoogle = useCallback(async () => {
     setError(null);
     try {
       await signInWithGoogle();
-      onClose();
+      handleClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign-in failed');
     }
-  }, [signInWithGoogle, onClose]);
+  }, [signInWithGoogle, handleClose]);
 
   return (
     <div className={`modal-overlay ${isClosing ? 'modal-overlay--closing' : ''}`} onClick={handleClose}>

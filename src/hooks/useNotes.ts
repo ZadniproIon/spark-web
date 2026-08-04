@@ -165,18 +165,45 @@ export function useNotes() {
   }, [state.notes, dispatch]);
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     if (state.user) {
       claimLegacyNotes(state.user.id);
       syncWithRemote();
       stopSync();
+
+      // Realtime subscription for instant updates
+      channel = supabase
+        .channel(`notes-realtime-${crypto.randomUUID()}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notes',
+            filter: `owner_id=eq.${state.user.id}`,
+          },
+          () => {
+            syncWithRemote();
+          }
+        )
+        .subscribe();
+
+      // Fallback polling (increased interval since realtime is active)
       syncTimer.current = setInterval(() => {
         syncWithRemote();
-      }, 10000);
+      }, 30000);
     } else {
       stopSync();
     }
-    return stopSync;
-  }, [state.user?.id]);
+
+    return () => {
+      stopSync();
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [state.user?.id, claimLegacyNotes, syncWithRemote, stopSync]);
 
   const addTextNote = useCallback(async (content: string) => {
     const now = new Date();

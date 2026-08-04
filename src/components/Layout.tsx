@@ -8,6 +8,7 @@ import { SettingsModal } from './SettingsModal';
 import { RecycleBinModal } from './RecycleBinModal';
 import { SparkSearchBar } from './ui/SparkSearchBar';
 import { useNotes } from '../hooks/useNotes';
+import { useAuth } from '../hooks/useAuth';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import type { Note } from '../types/note';
 
@@ -35,10 +36,13 @@ function distributeNotes(notes: Note[], cols: number): Note[][] {
 
 export function Layout() {
   const { state, dispatch } = useStore();
-  const { notes } = useNotes();
-  const { layoutMode } = useLayoutMode();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSearch, setShowSearch] = useState(() => Boolean(state.searchQuery));
+  
+  useAuth(); // Initialize auth listener globally
+
+  const { notes } = useNotes();
+  const { layoutMode } = useLayoutMode();
 
   const colCount = useMasonryColumnCount();
   const columns = useMemo(() => distributeNotes(notes, colCount), [notes, colCount]);

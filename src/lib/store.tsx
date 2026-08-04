@@ -77,8 +77,13 @@ function appReducer(state: AppState, action: Action): AppState {
       persistNotes(notes);
       return { ...state, notes };
     }
-    case 'SET_USER':
+    case 'SET_USER': {
+      if (action.payload === null && state.user !== null) {
+        persistNotes([]);
+        return { ...state, user: null, notes: [] };
+      }
       return { ...state, user: action.payload };
+    }
     case 'SET_THEME':
       localStorage.setItem('theme', action.payload);
       return { ...state, theme: action.payload };
