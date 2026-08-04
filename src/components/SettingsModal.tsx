@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import type { ThemePreference, LayoutMode } from '../types/note';
+import { useModalAnimation } from '../hooks/useModalAnimation';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -60,6 +61,7 @@ function MenuItem({
 }
 
 export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
+  const { isClosing, handleClose } = useModalAnimation(onClose);
   const { theme, setTheme } = useTheme();
   const { layoutMode, setLayoutMode } = useLayoutMode();
   const { user, signOut } = useAuth();
@@ -93,8 +95,8 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
   }, []);
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
+    <div className={`modal-overlay ${isClosing ? 'modal-overlay--closing' : ''}`} onClick={handleClose}>
+      <div className="settings-modal modal-content-animated" onClick={(e) => e.stopPropagation()}>
         {/* Left Sidebar Navigation */}
         <aside className="settings-modal__sidebar">
           <div className="settings-modal__brand">
@@ -139,7 +141,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
               {activeTab === 'account' && 'Account & Sync'}
               {activeTab === 'about' && 'About Spark'}
             </h2>
-            <button className="modal-close-btn" onClick={onClose} aria-label="Close settings">
+            <button className="modal-close-btn" onClick={handleClose} aria-label="Close settings">
               <X size={18} />
             </button>
           </header>
@@ -191,7 +193,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       subtitle="Sync your notes across all your devices"
                       onClick={() => {
                         onOpenAuth();
-                        onClose();
+                        handleClose();
                       }}
                     />
                   ) : (

@@ -72,7 +72,7 @@ export function Layout() {
             <span>Spark</span>
           </div>
           <button className="panel-button" onClick={() => setSidebarOpen(false)} aria-label="Collapse sidebar">
-            <PanelLeft size={22} />
+            <PanelLeft size={18} />
           </button>
         </div>
         <nav className="sidebar__actions">
@@ -94,7 +94,7 @@ export function Layout() {
 
       {!sidebarOpen && (
         <button className="sidebar-reopen" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
-          <PanelLeft size={22} />
+          <PanelLeft size={18} />
         </button>
       )}
 

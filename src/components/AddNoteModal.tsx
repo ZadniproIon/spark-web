@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Mic, X, Check, Play, Pause } from 'lucide-react';
 import { useNotes } from '../hooks/useNotes';
 import { useAudioRecorder } from '../hooks/useAudio';
+import { useModalAnimation } from '../hooks/useModalAnimation';
 
 interface AddNoteModalProps {
   onClose: () => void;
@@ -19,6 +20,15 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
   const [content, setContent] = useState('');
   const [isSavingVoice, setIsSavingVoice] = useState(false);
   const { addTextNote, addVoiceNote } = useNotes();
+  
+  const handleModalClose = useCallback(() => {
+    if (mode === 'voice') {
+      // cancelRecording(); // will be called later if needed
+    }
+    onClose();
+  }, [mode, onClose]);
+
+  const { isClosing, handleClose } = useModalAnimation(handleModalClose);
 
   const {
     isRecording,
@@ -44,9 +54,9 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
   const handleTextConfirm = useCallback(() => {
     if (content.trim()) {
       addTextNote(content.trim());
-      onClose();
+      handleClose();
     }
-  }, [content, addTextNote, onClose]);
+  }, [content, addTextNote, handleClose]);
 
   const handleStartVoice = useCallback(async () => {
     setMode('voice');
@@ -71,38 +81,20 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
       if (blob && blob.size > 0) {
         await addVoiceNote(blob, recDuration || duration);
       }
-      onClose();
+      handleClose();
     } catch (err) {
       console.error('Failed to save voice note:', err);
     } finally {
       setIsSavingVoice(false);
     }
-  }, [isSavingVoice, stopRecording, addVoiceNote, duration, onClose]);
-
-  const handleModalClose = useCallback(() => {
-    if (mode === 'voice') {
-      cancelRecording();
-    }
-    onClose();
-  }, [mode, cancelRecording, onClose]);
+  }, [isSavingVoice, stopRecording, addVoiceNote, duration, handleClose]);
 
   const bars = 24;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0, 0, 0, 0.4)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '16px',
-      }}
-      onClick={handleModalClose}
-    >
+    <div className={`modal-overlay ${isClosing ? 'modal-overlay--closing' : ''}`} onClick={handleClose}>
       <div
+        className="modal-content-animated"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
@@ -113,7 +105,7 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
           display: 'flex',
           flexDirection: 'column',
           gap: '16px',
-          boxShadow: 'var(--shadow-2)',
+          boxShadow: '0 16px 48px rgba(0, 0, 0, 0.15)',
           transition: 'all 200ms ease',
         }}
       >
@@ -176,7 +168,7 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   type="button"
                   style={{
                     background: 'var(--bg-card)',

@@ -1,12 +1,14 @@
 import { useState, useCallback } from 'react';
 import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useModalAnimation } from '../hooks/useModalAnimation';
 
 interface AuthModalProps {
   onClose: () => void;
 }
 
 export function AuthModal({ onClose }: AuthModalProps) {
+  const { isClosing, handleClose } = useModalAnimation(onClose);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -49,25 +51,23 @@ export function AuthModal({ onClose }: AuthModalProps) {
   }, [signInWithGoogle, onClose]);
 
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000 }}
-      onClick={onClose}
-    >
+    <div className={`modal-overlay ${isClosing ? 'modal-overlay--closing' : ''}`} onClick={handleClose}>
       <div
+        className="modal-content-animated"
         onClick={(e) => e.stopPropagation()}
         style={{
           background: 'var(--bg-card)',
-          borderRadius: '32px 32px 0 0',
-          padding: '24px 32px 40px',
+          borderRadius: '24px',
+          padding: '32px',
           width: 'min(100%, 460px)',
-          boxShadow: 'var(--shadow-2)',
+          boxShadow: '0 16px 48px rgba(0, 0, 0, 0.15)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)' }}>
+          <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
             {isForgotPassword ? 'Reset password' : isSignUp ? 'Create account' : 'Sign in'}
           </span>
-          <button onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+          <button className="modal-close-btn" onClick={handleClose}>
             <X size={18} />
           </button>
         </div>
@@ -81,7 +81,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
         {resetSent ? (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <p style={{ fontSize: 14, color: 'var(--text-primary)', marginBottom: 8 }}>Check your email for a password reset link.</p>
-            <button onClick={onClose} style={{ fontSize: 14, color: 'var(--flame)', background: 'none', border: 'none', cursor: 'pointer' }}>Close</button>
+            <button onClick={handleClose} style={{ fontSize: 14, color: 'var(--flame)', background: 'none', border: 'none', cursor: 'pointer' }}>Close</button>
           </div>
         ) : (
           <>
