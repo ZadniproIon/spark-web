@@ -5,13 +5,18 @@ import { VoicePlayerSheet } from './VoicePlayerSheet';
 import { EditNoteModal } from './EditNoteModal';
 import type { Note } from '../types/note';
 
-function parseLocalDate(str: string): Date {
-  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
-  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6])) : new Date(str);
-}
-function formatNoteDisplay(note: Note) {
-  const d = parseLocalDate(note.updatedAtLocal ?? note.updatedAt);
-  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+function formatNoteDisplay(note: Note): string {
+  const raw = note.updatedAt || note.createdAt;
+  if (!raw) return '';
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return '';
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[d.getMonth()];
+  const day = d.getDate();
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${month} ${day}, ${year} - ${hours}:${minutes}`;
 }
 function renderContentWithLinks(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;

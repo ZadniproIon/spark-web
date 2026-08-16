@@ -13,30 +13,11 @@ function noteFromRemote(remote: Record<string, unknown>): Note {
     createdAt: (remote.created_at as string) ?? new Date().toISOString(),
     updatedAt: (remote.updated_at as string) ?? new Date().toISOString(),
     ownerId: (remote.owner_id as string) ?? '',
-    createdAtLocal: (remote.created_at_local as string) ?? null,
-    updatedAtLocal: (remote.updated_at_local as string) ?? null,
     isPinned: (remote.is_pinned as boolean) ?? false,
     isTrashed: (remote.is_trashed as boolean) ?? false,
     trashedAt: (remote.trashed_at as string) ?? null,
     isSynced: true,
   };
-}
-
-function formatDateLocal(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  const ss = String(date.getSeconds()).padStart(2, '0');
-  const ms = String(date.getMilliseconds()).padStart(3, '0');
-  return `${y}-${m}-${d}T${hh}:${mm}:${ss}.${ms}`;
-}
-
-function parseLocalDate(str: string): Date {
-  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
-  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6]));
-  return new Date(str);
 }
 
 function noteToRemote(note: Note): Record<string, unknown> {
@@ -48,8 +29,6 @@ function noteToRemote(note: Note): Record<string, unknown> {
     owner_id: note.ownerId,
     created_at: note.createdAt,
     updated_at: note.updatedAt,
-    created_at_local: note.createdAtLocal,
-    updated_at_local: note.updatedAtLocal,
     is_pinned: note.isPinned,
     is_trashed: note.isTrashed,
     trashed_at: note.trashedAt,
@@ -207,7 +186,7 @@ export function useNotes() {
 
   const addTextNote = useCallback(async (content: string) => {
     const now = new Date();
-    const localStamp = formatDateLocal(now);
+    const isoNow = now.toISOString();
     const ownerId = state.user?.id ?? 'guest';
     const note: Note = {
       id: crypto.randomUUID(),
@@ -215,11 +194,9 @@ export function useNotes() {
       content,
       audioPath: null,
       audioUrl: null,
-      createdAt: localStamp,
-      updatedAt: localStamp,
+      createdAt: isoNow,
+      updatedAt: isoNow,
       ownerId,
-      createdAtLocal: localStamp,
-      updatedAtLocal: localStamp,
       isPinned: false,
       isTrashed: false,
       trashedAt: null,
@@ -238,7 +215,7 @@ export function useNotes() {
 
   const addVoiceNote = useCallback(async (audioBlob: Blob, duration: number) => {
     const now = new Date();
-    const localStamp = formatDateLocal(now);
+    const isoNow = now.toISOString();
     const noteId = crypto.randomUUID();
     const ownerId = state.user?.id ?? 'guest';
     const note: Note = {
@@ -247,11 +224,9 @@ export function useNotes() {
       content: `Voice note (${Math.round(duration)}s)`,
       audioPath: null,
       audioUrl: URL.createObjectURL(audioBlob),
-      createdAt: localStamp,
-      updatedAt: localStamp,
+      createdAt: isoNow,
+      updatedAt: isoNow,
       ownerId,
-      createdAtLocal: localStamp,
-      updatedAtLocal: localStamp,
       isPinned: false,
       isTrashed: false,
       trashedAt: null,
@@ -282,8 +257,8 @@ export function useNotes() {
         content: `Voice note (${Math.round(duration)}s)`,
         audio_url: audioUrl,
         owner_id: note.ownerId,
-        created_at: localStamp,
-        updated_at: localStamp,
+        created_at: isoNow,
+        updated_at: isoNow,
         is_pinned: false,
         is_trashed: false,
       });
@@ -302,8 +277,8 @@ export function useNotes() {
     const existing = state.notes.find((n) => n.id === id);
     if (!existing) return;
     const now = new Date();
-    const localStamp = formatDateLocal(now);
-    const updated: Note = { ...existing, ...updates, updatedAt: localStamp, updatedAtLocal: localStamp, isSynced: false };
+    const isoNow = now.toISOString();
+    const updated: Note = { ...existing, ...updates, updatedAt: isoNow, isSynced: false };
     dispatch({ type: 'UPDATE_NOTE', payload: updated });
     if (state.user) {
       const { error } = await supabase.from('notes').upsert(noteToRemote(updated));
@@ -347,14 +322,14 @@ export function useNotes() {
     .sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
-      return parseLocalDate(b.updatedAt).getTime() - parseLocalDate(a.updatedAt).getTime();
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
 
   const trashedNotes = state.notes
     .filter((n) => n.isTrashed)
     .sort((a, b) => {
       if (!a.trashedAt || !b.trashedAt) return 0;
-      return parseLocalDate(b.trashedAt).getTime() - parseLocalDate(a.trashedAt).getTime();
+      return new Date(b.trashedAt).getTime() - new Date(a.trashedAt).getTime();
     });
 
   const filteredNotes = state.searchQuery

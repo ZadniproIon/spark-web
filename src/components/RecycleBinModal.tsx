@@ -70,7 +70,7 @@ export function RecycleBinModal({ onClose }: RecycleBinModalProps) {
                     </p>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
                       <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-                        {note.trashedAt ? format(new Date(note.trashedAt), 'MMM d, yyyy') : ''}
+                        {note.trashedAt ? format(new Date(note.trashedAt), 'MMM d, yyyy - HH:mm') : ''}
                       </span>
                       <span style={{ fontSize: 12, color: 'var(--flame)' }}>{daysLeft} days left</span>
                     </div>

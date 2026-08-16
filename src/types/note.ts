@@ -9,8 +9,6 @@ export interface Note {
   createdAt: string;
   updatedAt: string;
   ownerId: string;
-  createdAtLocal: string | null;
-  updatedAtLocal: string | null;
   isPinned: boolean;
   isTrashed: boolean;
   trashedAt: string | null;
