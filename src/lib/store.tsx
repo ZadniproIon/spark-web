@@ -7,6 +7,7 @@ export interface AppState {
   theme: ThemePreference;
   layoutMode: LayoutMode;
   haptics: boolean;
+  autoHideSyncDot: boolean;
   isLoading: boolean;
   searchQuery: string;
   modal: ModalType;
@@ -22,6 +23,7 @@ type Action =
   | { type: 'SET_THEME'; payload: ThemePreference }
   | { type: 'SET_LAYOUT_MODE'; payload: LayoutMode }
   | { type: 'SET_HAPTICS'; payload: boolean }
+  | { type: 'SET_AUTO_HIDE_SYNC_DOT'; payload: boolean }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_SEARCH'; payload: string }
   | { type: 'OPEN_MODAL'; payload: { modal: ModalType; data?: unknown } }
@@ -47,6 +49,7 @@ const initialState: AppState = {
   theme: (localStorage.getItem('theme') as ThemePreference) || 'system',
   layoutMode: loadLayoutMode(),
   haptics: localStorage.getItem('haptics') !== 'false',
+  autoHideSyncDot: localStorage.getItem('spark_auto_hide_sync_dot') !== 'false',
   isLoading: false,
   searchQuery: '',
   modal: null,
@@ -93,6 +96,9 @@ function appReducer(state: AppState, action: Action): AppState {
     case 'SET_HAPTICS':
       localStorage.setItem('haptics', String(action.payload));
       return { ...state, haptics: action.payload };
+    case 'SET_AUTO_HIDE_SYNC_DOT':
+      localStorage.setItem('spark_auto_hide_sync_dot', String(action.payload));
+      return { ...state, autoHideSyncDot: action.payload };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'SET_SEARCH':

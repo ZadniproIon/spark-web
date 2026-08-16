@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
-import { X, Sun, Moon, Monitor, Trash2, LogOut, Mail, Lock, LayoutGrid, Palette, User, Info, MessageCircle, GitFork, Square, Flame, Copy, Check } from 'lucide-react';
+import { X, Sun, Moon, Monitor, Trash2, LogOut, Mail, Lock, LayoutGrid, Palette, User, Info, MessageCircle, GitFork, Square, Flame, Copy, Check, Radio } from 'lucide-react';
 import { SparkSelect, type SelectOption } from './ui/SparkSelect';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { useLayoutMode } from '../hooks/useLayoutMode';
+import { useStore } from '../lib/store';
 import type { ThemePreference, LayoutMode } from '../types/note';
 import { useModalAnimation } from '../hooks/useModalAnimation';
 
@@ -13,6 +14,44 @@ interface SettingsModalProps {
 }
 
 type TabType = 'appearance' | 'account' | 'about';
+
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (val: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={(e) => {
+        e.stopPropagation();
+        onChange(!checked);
+      }}
+      style={{
+        width: 40,
+        height: 22,
+        borderRadius: 11,
+        backgroundColor: checked ? '#10B981' : 'var(--border)',
+        border: 'none',
+        padding: 2,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        transition: 'background-color 200ms ease',
+      }}
+    >
+      <div
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: '50%',
+          backgroundColor: '#fff',
+          transform: checked ? 'translateX(18px)' : 'translateX(0)',
+          transition: 'transform 200ms ease',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+        }}
+      />
+    </button>
+  );
+}
 
 const themeOptions: SelectOption<ThemePreference>[] = [
   { value: 'system', label: 'Device default', icon: <Monitor size={14} /> },
@@ -64,6 +103,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
   const { isClosing, handleClose } = useModalAnimation(onClose);
   const { theme, setTheme } = useTheme();
   const { layoutMode, setLayoutMode } = useLayoutMode();
+  const { state, dispatch } = useStore();
   const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('appearance');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -171,6 +211,18 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                         value={layoutMode}
                         options={layoutOptions}
                         onChange={(val) => setLayoutMode(val)}
+                      />
+                    }
+                  />
+                  <MenuItem
+                    icon={<Radio size={16} />}
+                    label="Auto-hide green sync dot"
+                    subtitle="Fade out green dot 5 seconds after note is synced"
+                    onClick={() => dispatch({ type: 'SET_AUTO_HIDE_SYNC_DOT', payload: !state.autoHideSyncDot })}
+                    trailing={
+                      <ToggleSwitch
+                        checked={state.autoHideSyncDot}
+                        onChange={(val) => dispatch({ type: 'SET_AUTO_HIDE_SYNC_DOT', payload: val })}
                       />
                     }
                   />

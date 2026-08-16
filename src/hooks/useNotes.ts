@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../lib/store';
 import { supabase, supabaseConfig } from '../lib/supabase';
+import { saveOfflineAudio, getOfflineAudio, deleteOfflineAudio } from '../lib/offlineAudio';
 import type { Note } from '../types/note';
 
 function noteFromRemote(remote: Record<string, unknown>): Note {
@@ -96,12 +97,33 @@ export function useNotes() {
       for (const note of localNotes) {
         if (!remoteIds.has(note.id) && note.ownerId === user.id) {
           if (!note.isSynced) {
-            const { error: pushErr } = await supabase.from('notes').upsert(noteToRemote(note));
+            let noteToSync = note;
+            if (note.type === 'voice' && (!note.audioUrl || note.audioUrl.startsWith('blob:'))) {
+              const offlineBlob = await getOfflineAudio(note.id);
+              if (offlineBlob) {
+                const isWav = offlineBlob.type.includes('wav');
+                const isMp4 = offlineBlob.type.includes('mp4') || offlineBlob.type.includes('m4a');
+                const ext = isWav ? 'wav' : isMp4 ? 'm4a' : 'webm';
+                const filePath = `${user.id}/${note.id}.${ext}`;
+                const { error: uploadError } = await supabase.storage
+                  .from(supabaseConfig.voiceBucket)
+                  .upload(filePath, offlineBlob, { contentType: offlineBlob.type || 'audio/wav', upsert: true });
+                if (!uploadError) {
+                  const { data: urlData } = await supabase.storage
+                    .from(supabaseConfig.voiceBucket)
+                    .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+                  noteToSync = { ...note, audioUrl: urlData?.signedUrl ?? null };
+                  deleteOfflineAudio(note.id);
+                }
+              }
+            }
+
+            const { error: pushErr } = await supabase.from('notes').upsert(noteToRemote(noteToSync));
             if (pushErr) {
               console.error('[Spark] Sync push error for', note.id, pushErr);
               continue;
             }
-            localById.set(note.id, { ...note, isSynced: true });
+            localById.set(note.id, { ...noteToSync, isSynced: true });
             changed = true;
           } else {
             localById.delete(note.id);
@@ -118,7 +140,7 @@ export function useNotes() {
     } finally {
       isSyncing.current = false;
     }
-  }, [state.user, state.notes, dispatch]);
+  }, [state.user, dispatch]);
 
   const claimLegacyNotes = useCallback(async (userId: string) => {
     const updated: Note[] = [];
@@ -145,6 +167,12 @@ export function useNotes() {
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const handleOnline = () => {
+      syncWithRemote();
+    };
+
+    window.addEventListener('online', handleOnline);
 
     if (state.user) {
       claimLegacyNotes(state.user.id);
@@ -177,6 +205,7 @@ export function useNotes() {
     }
 
     return () => {
+      window.removeEventListener('online', handleOnline);
       stopSync();
       if (channel) {
         supabase.removeChannel(channel);
@@ -232,6 +261,7 @@ export function useNotes() {
       trashedAt: null,
       isSynced: false,
     };
+    saveOfflineAudio(noteId, audioBlob);
     dispatch({ type: 'ADD_NOTE', payload: note });
 
     if (state.user) {
@@ -265,6 +295,7 @@ export function useNotes() {
       if (error) {
         console.error('Failed to sync voice note:', error);
       } else {
+        deleteOfflineAudio(noteId);
         dispatch({
           type: 'UPDATE_NOTE',
           payload: { ...note, audioUrl, isSynced: true },
