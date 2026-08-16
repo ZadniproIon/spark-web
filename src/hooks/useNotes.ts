@@ -260,10 +260,13 @@ export function useNotes() {
     dispatch({ type: 'ADD_NOTE', payload: note });
 
     if (state.user) {
-      const filePath = `${state.user.id}/${noteId}.webm`;
+      const isWav = audioBlob.type.includes('wav');
+      const isMp4 = audioBlob.type.includes('mp4') || audioBlob.type.includes('m4a') || audioBlob.type.includes('aac');
+      const ext = isWav ? 'wav' : isMp4 ? 'm4a' : 'webm';
+      const filePath = `${state.user.id}/${noteId}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from(supabaseConfig.voiceBucket)
-        .upload(filePath, audioBlob);
+        .upload(filePath, audioBlob, { contentType: audioBlob.type || (isWav ? 'audio/wav' : isMp4 ? 'audio/mp4' : 'audio/webm'), upsert: true });
       if (uploadError) {
         console.error('Failed to upload voice audio:', uploadError);
         return;

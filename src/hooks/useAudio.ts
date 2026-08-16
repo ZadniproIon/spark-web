@@ -1,4 +1,46 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
+import fixWebmDuration from 'fix-webm-duration';
+
+function audioBufferToWav(buffer: AudioBuffer): Blob {
+  const numChannels = 1;
+  const sampleRate = buffer.sampleRate;
+  const format = 1;
+  const bitDepth = 16;
+
+  const channelData = buffer.getChannelData(0);
+  const dataLength = channelData.length * 2;
+  const bufferLength = 44 + dataLength;
+  const arrayBuffer = new ArrayBuffer(bufferLength);
+  const view = new DataView(arrayBuffer);
+
+  const writeString = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(36, 'data');
+  view.setUint32(40, dataLength, true);
+
+  let offset = 44;
+  for (let i = 0; i < channelData.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, channelData[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+
+  return new Blob([arrayBuffer], { type: 'audio/wav' });
+}
 
 export function useAudioRecorder() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -68,8 +110,8 @@ export function useAudioRecorder() {
         ? 'audio/webm;codecs=opus'
         : MediaRecorder.isTypeSupported('audio/webm')
         ? 'audio/webm'
-        : MediaRecorder.isTypeSupported('audio/mp4')
-        ? 'audio/mp4'
+        : MediaRecorder.isTypeSupported('audio/mp4;codecs=aac')
+        ? 'audio/mp4;codecs=aac'
         : '';
 
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
@@ -143,7 +185,27 @@ export function useAudioRecorder() {
       const finalDuration = Math.max(1, calculatedDuration);
       const recorder = mediaRecorderRef.current;
 
-      if (!recorder || recorder.state === 'inactive') {
+      const finish = async (rawBlob: Blob) => {
+        let finalBlob = rawBlob;
+        try {
+          const arrayBuffer = await rawBlob.arrayBuffer();
+          const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+          const ctx = new AudioCtx();
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+          finalBlob = audioBufferToWav(audioBuffer);
+          ctx.close().catch(() => {});
+        } catch (e) {
+          console.warn('WAV conversion failed, falling back to WebM fix:', e);
+          if (rawBlob.type.includes('webm')) {
+            try {
+              finalBlob = await new Promise<Blob>((res) => {
+                fixWebmDuration(rawBlob, finalDuration * 1000, (fixedBlob) => {
+                  res(fixedBlob);
+                });
+              });
+            } catch (_) {}
+          }
+        }
         stopAudioContext();
         if (streamRef.current) {
           streamRef.current.getTracks().forEach((t) => t.stop());
@@ -151,23 +213,20 @@ export function useAudioRecorder() {
         }
         setIsRecording(false);
         setIsPaused(false);
-        const blob = new Blob(chunksRef.current, { type: recorder?.mimeType || 'audio/webm' });
-        resolve({ blob, duration: finalDuration });
+        resolve({ blob: finalBlob, duration: finalDuration });
+      };
+
+      if (!recorder || recorder.state === 'inactive') {
+        const mimeType = recorder?.mimeType || 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        finish(blob);
         return;
       }
 
       recorder.onstop = () => {
         const mimeType = recorder.mimeType || 'audio/webm';
         const blob = new Blob(chunksRef.current, { type: mimeType });
-
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach((t) => t.stop());
-          streamRef.current = null;
-        }
-        stopAudioContext();
-        setIsRecording(false);
-        setIsPaused(false);
-        resolve({ blob, duration: finalDuration });
+        finish(blob);
       };
 
       recorder.stop();
