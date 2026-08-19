@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Flame, PanelLeft, Plus, Search, Settings, Trash2 } from 'lucide-react';
+import { Flame, PanelLeft, Plus, Search, Settings, Trash2, Info } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { NoteCard } from './NoteCard';
 import { AddNoteModal } from './AddNoteModal';
@@ -9,6 +9,7 @@ import { RecycleBinModal } from './RecycleBinModal';
 import { SparkSearchBar } from './ui/SparkSearchBar';
 import { useNotes } from '../hooks/useNotes';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../hooks/useTheme';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import type { Note } from '../types/note';
 
@@ -39,7 +40,8 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSearch, setShowSearch] = useState(() => Boolean(state.searchQuery));
   
-  useAuth(); // Initialize auth listener globally
+  useTheme(); // Ensure global theme and system dark/light change listener are always active
+  const { user } = useAuth();
 
   const { notes } = useNotes();
   const { layoutMode } = useLayoutMode();
@@ -103,12 +105,25 @@ export function Layout() {
       )}
 
       <main className="notes-board">
+        {!user && (
+          <div className="guest-banner-container">
+            <button
+              type="button"
+              className="guest-banner"
+              onClick={() => openModal('auth')}
+              title="Click to sign in and sync notes to the cloud"
+            >
+              <Info size={15} />
+              <span>You’re on a guest account</span>
+            </button>
+          </div>
+        )}
+
         {notes.length === 0 ? (
           <div className="notes-empty">
-            <p>{state.searchQuery ? 'No matching notes found' : 'No notes yet'}</p>
-            {!state.searchQuery && (
-              <button onClick={() => openModal('addNote')}>Create your first note</button>
-            )}
+            <p className="notes-empty__title">
+              {state.searchQuery ? 'No matching notes found' : 'No notes'}
+            </p>
           </div>
         ) : layoutMode === 'masonry' ? (
           <div className="notes-masonry">
