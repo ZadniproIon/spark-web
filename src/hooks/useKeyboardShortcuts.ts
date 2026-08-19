@@ -3,7 +3,8 @@ import { useStore } from '../lib/store';
 
 interface KeyboardShortcutsOptions {
   onOpenNewNote?: () => void;
-  onFocusSearch?: () => void;
+  onToggleSearch?: () => void;
+  onCloseSearch?: () => void;
 }
 
 export function useKeyboardShortcuts(options?: KeyboardShortcutsOptions) {
@@ -17,26 +18,29 @@ export function useKeyboardShortcuts(options?: KeyboardShortcutsOptions) {
         activeEl instanceof HTMLTextAreaElement ||
         (activeEl as HTMLElement)?.isContentEditable;
 
-      // 1. ESCAPE: Clear search when no modal is open (modals handle their own Escape with animation)
+      // 1. ESCAPE: Close search and clear query when no modal is open
       if (e.key === 'Escape') {
-        if (!state.modal && state.searchQuery) {
-          e.preventDefault();
-          dispatch({ type: 'SET_SEARCH', payload: '' });
+        if (!state.modal) {
+          options?.onCloseSearch?.();
+          if (state.searchQuery) {
+            e.preventDefault();
+            dispatch({ type: 'SET_SEARCH', payload: '' });
+          }
         }
         return;
       }
 
-      // 2. Ctrl+K or Cmd+K: Focus search
+      // 2. Ctrl+K or Cmd+K: Toggle search (open if closed, close if open)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        options?.onFocusSearch?.();
+        options?.onToggleSearch?.();
         return;
       }
 
-      // 3. "/" key when not in an input: Focus search
+      // 3. "/" key when not in an input: Toggle search
       if (e.key === '/' && !isInput && !state.modal) {
         e.preventDefault();
-        options?.onFocusSearch?.();
+        options?.onToggleSearch?.();
         return;
       }
 

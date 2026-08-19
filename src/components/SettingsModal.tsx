@@ -925,7 +925,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>N</kbd>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-                    <span style={{ color: 'var(--text-primary)' }}>Search notes</span>
+                    <span style={{ color: 'var(--text-primary)' }}>Toggle search</span>
                     <div style={{ display: 'flex', gap: 4 }}>
                       <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>/</kbd>
                       <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl K</kbd>

@@ -19,6 +19,8 @@ export type ThemePreference = 'system' | 'light' | 'dark';
 
 export type LayoutMode = '1col' | 'masonry';
 
+export type SearchDesign = 'spotlight' | 'floating' | 'sidebar';
+
 export type ModalType =
   | 'addNote'
   | 'voiceRecorder'
@@ -32,6 +34,7 @@ export type ModalType =
   | 'changePassword'
   | 'deleteAccount'
   | 'terms'
+  | 'spotlightSearch'
   | null;
 
 export interface ModalState {

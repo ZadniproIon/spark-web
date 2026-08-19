@@ -1,11 +1,12 @@
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from 'react';
-import type { Note, ThemePreference, LayoutMode, ModalType } from '../types/note';
+import type { Note, ThemePreference, LayoutMode, SearchDesign, ModalType } from '../types/note';
 
 export interface AppState {
   notes: Note[];
   user: import('@supabase/supabase-js').User | null;
   theme: ThemePreference;
   layoutMode: LayoutMode;
+  searchDesign: SearchDesign;
   haptics: boolean;
   autoHideSyncDot: boolean;
   isLoading: boolean;
@@ -22,6 +23,7 @@ type Action =
   | { type: 'SET_USER'; payload: import('@supabase/supabase-js').User | null }
   | { type: 'SET_THEME'; payload: ThemePreference }
   | { type: 'SET_LAYOUT_MODE'; payload: LayoutMode }
+  | { type: 'SET_SEARCH_DESIGN'; payload: SearchDesign }
   | { type: 'SET_HAPTICS'; payload: boolean }
   | { type: 'SET_AUTO_HIDE_SYNC_DOT'; payload: boolean }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -43,11 +45,17 @@ function loadLayoutMode(): LayoutMode {
   return saved === '1col' ? '1col' : 'masonry';
 }
 
+function loadSearchDesign(): SearchDesign {
+  const saved = localStorage.getItem('spark_search_design');
+  return saved === 'floating' || saved === 'sidebar' ? saved : 'spotlight';
+}
+
 const initialState: AppState = {
   notes: loadNotes(),
   user: null,
   theme: (localStorage.getItem('theme') as ThemePreference) || 'system',
   layoutMode: loadLayoutMode(),
+  searchDesign: loadSearchDesign(),
   haptics: localStorage.getItem('haptics') !== 'false',
   autoHideSyncDot: localStorage.getItem('spark_auto_hide_sync_dot') !== 'false',
   isLoading: false,
@@ -93,6 +101,9 @@ function appReducer(state: AppState, action: Action): AppState {
     case 'SET_LAYOUT_MODE':
       localStorage.setItem('spark_layout_mode', action.payload);
       return { ...state, layoutMode: action.payload };
+    case 'SET_SEARCH_DESIGN':
+      localStorage.setItem('spark_search_design', action.payload);
+      return { ...state, searchDesign: action.payload };
     case 'SET_HAPTICS':
       localStorage.setItem('haptics', String(action.payload));
       return { ...state, haptics: action.payload };

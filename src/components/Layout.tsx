@@ -3,10 +3,11 @@ import { Flame, PanelLeft, Plus, Search, Settings, Trash2, Info } from 'lucide-r
 import { useStore } from '../lib/store';
 import { NoteCard } from './NoteCard';
 import { AddNoteModal } from './AddNoteModal';
+import { EditNoteModal } from './EditNoteModal';
 import { AuthModal } from './AuthModal';
 import { SettingsModal } from './SettingsModal';
 import { RecycleBinModal } from './RecycleBinModal';
-import { SparkSearchBar } from './ui/SparkSearchBar';
+import { FloatingTopSearchBar } from './FloatingTopSearchBar';
 import { useNotes } from '../hooks/useNotes';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
@@ -14,7 +15,7 @@ import { useLayoutMode } from '../hooks/useLayoutMode';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import type { Note } from '../types/note';
 
-type ModalName = 'addNote' | 'voiceRecorder' | 'auth' | 'settings' | 'recycleBin';
+type ModalName = 'addNote' | 'voiceRecorder' | 'auth' | 'settings' | 'recycleBin' | 'editNote';
 
 function useMasonryColumnCount(): number {
   const [winWidth, setWinWidth] = useState(() => window.innerWidth);
@@ -50,35 +51,34 @@ export function Layout() {
   const colCount = useMasonryColumnCount();
   const columns = useMemo(() => distributeNotes(notes, colCount), [notes, colCount]);
 
-  const openModal = useCallback((modal: ModalName) => {
-    dispatch({ type: 'OPEN_MODAL', payload: { modal } });
+  const openModal = useCallback((modal: ModalName, data?: unknown) => {
+    dispatch({ type: 'OPEN_MODAL', payload: { modal, data } });
   }, [dispatch]);
 
   const closeModal = useCallback(() => dispatch({ type: 'CLOSE_MODAL' }), [dispatch]);
 
-  const handleFocusSearch = useCallback(() => {
-    setSidebarOpen(true);
-    setShowSearch(true);
-  }, []);
+  const handleToggleSearch = useCallback(() => {
+    setShowSearch((prev) => {
+      const next = !prev;
+      if (!next && state.searchQuery) {
+        dispatch({ type: 'SET_SEARCH', payload: '' });
+      }
+      return next;
+    });
+  }, [state.searchQuery, dispatch]);
+
+  const handleCloseSearch = useCallback(() => {
+    setShowSearch(false);
+    if (state.searchQuery) {
+      dispatch({ type: 'SET_SEARCH', payload: '' });
+    }
+  }, [state.searchQuery, dispatch]);
 
   useKeyboardShortcuts({
     onOpenNewNote: () => openModal('addNote'),
-    onFocusSearch: handleFocusSearch,
+    onToggleSearch: handleToggleSearch,
+    onCloseSearch: handleCloseSearch,
   });
-
-  const handleToggleSearch = useCallback(() => {
-    if (!sidebarOpen) {
-      setSidebarOpen(true);
-      setShowSearch(true);
-    } else if (showSearch) {
-      setShowSearch(false);
-      if (state.searchQuery) {
-        dispatch({ type: 'SET_SEARCH', payload: '' });
-      }
-    } else {
-      setShowSearch(true);
-    }
-  }, [sidebarOpen, showSearch, state.searchQuery, dispatch]);
 
   return (
     <div className={`app-shell ${sidebarOpen ? '' : 'app-shell--sidebar-closed'}`}>
@@ -95,15 +95,6 @@ export function Layout() {
         <nav className="sidebar__actions">
           <SidebarAction icon={<Plus />} label="New note" onClick={() => openModal('addNote')} />
           <SidebarAction icon={<Search />} label="Search" onClick={handleToggleSearch} />
-          {showSearch && (
-            <div className="sidebar__search-wrapper">
-              <SparkSearchBar
-                value={state.searchQuery}
-                onChange={(q) => dispatch({ type: 'SET_SEARCH', payload: q })}
-                autoFocus
-              />
-            </div>
-          )}
           <SidebarAction icon={<Trash2 />} label="Recycle bin" onClick={() => openModal('recycleBin')} />
           <SidebarAction icon={<Settings size={21} />} label="Settings" onClick={() => openModal('settings')} />
         </nav>
@@ -128,6 +119,13 @@ export function Layout() {
               <span>You’re on a guest account</span>
             </button>
           </div>
+        )}
+
+        {showSearch && (
+          <FloatingTopSearchBar
+            resultCount={notes.length}
+            onClose={handleCloseSearch}
+          />
         )}
 
         {notes.length === 0 ? (
@@ -158,6 +156,9 @@ export function Layout() {
       {state.modal === 'addNote' && <AddNoteModal onClose={closeModal} />}
       {state.modal === 'voiceRecorder' && <AddNoteModal onClose={closeModal} initialMode="voice" />}
       {state.modal === 'auth' && <AuthModal onClose={closeModal} />}
+      {state.modal === 'editNote' && Boolean(state.modalData) && (
+        <EditNoteModal note={state.modalData as Note} onClose={closeModal} />
+      )}
       {state.modal === 'settings' && (
         <SettingsModal
           onClose={closeModal}
