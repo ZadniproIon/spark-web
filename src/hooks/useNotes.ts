@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../lib/store';
+import { toast } from '../lib/toast';
 import { supabase, supabaseConfig } from '../lib/supabase';
 import { saveOfflineAudio, getOfflineAudio, deleteOfflineAudio } from '../lib/offlineAudio';
 import type { Note } from '../types/note';
@@ -232,6 +233,7 @@ export function useNotes() {
       isSynced: false,
     };
     dispatch({ type: 'ADD_NOTE', payload: note });
+    toast.success('Note created');
     if (state.user) {
       const { error } = await supabase.from('notes').upsert(noteToRemote(note));
       if (error) {
@@ -263,6 +265,7 @@ export function useNotes() {
     };
     saveOfflineAudio(noteId, audioBlob);
     dispatch({ type: 'ADD_NOTE', payload: note });
+    toast.success('Voice note saved');
 
     if (state.user) {
       const isWav = audioBlob.type.includes('wav');
@@ -304,38 +307,62 @@ export function useNotes() {
     }
   }, [state.user, dispatch]);
 
-  const updateNote = useCallback(async (id: string, updates: Partial<Note>) => {
-    const existing = state.notes.find((n) => n.id === id);
-    if (!existing) return;
-    const now = new Date();
-    const isoNow = now.toISOString();
-    const updated: Note = { ...existing, ...updates, updatedAt: isoNow, isSynced: false };
-    dispatch({ type: 'UPDATE_NOTE', payload: updated });
-    if (state.user) {
-      const { error } = await supabase.from('notes').upsert(noteToRemote(updated));
-      if (error) {
-        console.error('Failed to sync update:', error);
-      } else {
-        dispatch({ type: 'UPDATE_NOTE', payload: { ...updated, isSynced: true } });
+  const updateNote = useCallback(
+    async (id: string, updates: Partial<Note>, touchUpdatedAt = true) => {
+      const existing = state.notes.find((n) => n.id === id);
+      if (!existing) return;
+      const now = new Date();
+      const isoNow = now.toISOString();
+      const updated: Note = {
+        ...existing,
+        ...updates,
+        updatedAt: touchUpdatedAt ? (updates.updatedAt ?? isoNow) : existing.updatedAt,
+        isSynced: false,
+      };
+      dispatch({ type: 'UPDATE_NOTE', payload: updated });
+      if (state.user) {
+        const { error } = await supabase.from('notes').upsert(noteToRemote(updated));
+        if (error) {
+          console.error('Failed to sync update:', error);
+        } else {
+          dispatch({ type: 'UPDATE_NOTE', payload: { ...updated, isSynced: true } });
+        }
       }
-    }
-  }, [state.notes, state.user, dispatch]);
+    },
+    [state.notes, state.user, dispatch]
+  );
 
-  const togglePin = useCallback(async (id: string) => {
-    const note = state.notes.find((n) => n.id === id);
-    if (note) await updateNote(id, { isPinned: !note.isPinned });
-  }, [state.notes, updateNote]);
+  const togglePin = useCallback(
+    async (id: string) => {
+      const note = state.notes.find((n) => n.id === id);
+      if (note) {
+        const newPinned = !note.isPinned;
+        await updateNote(id, { isPinned: newPinned }, false);
+        toast.info(newPinned ? 'Note pinned' : 'Note unpinned');
+      }
+    },
+    [state.notes, updateNote]
+  );
 
-  const moveToTrash = useCallback(async (id: string) => {
-    await updateNote(id, { isTrashed: true, trashedAt: new Date().toISOString() });
-  }, [updateNote]);
+  const moveToTrash = useCallback(
+    async (id: string) => {
+      await updateNote(id, { isTrashed: true, isPinned: false, trashedAt: new Date().toISOString() }, false);
+      toast.info('Note moved to recycle bin');
+    },
+    [updateNote]
+  );
 
-  const restoreNote = useCallback(async (id: string) => {
-    await updateNote(id, { isTrashed: false, trashedAt: null });
-  }, [updateNote]);
+  const restoreNote = useCallback(
+    async (id: string) => {
+      await updateNote(id, { isTrashed: false, trashedAt: null }, false);
+      toast.success('Note restored');
+    },
+    [updateNote]
+  );
 
   const deleteForever = useCallback(async (id: string) => {
     dispatch({ type: 'DELETE_NOTE', payload: id });
+    toast.info('Note permanently deleted');
     if (state.user) {
       const { error } = await supabase.from('notes').delete().eq('id', id).eq('owner_id', state.user.id);
       if (error) {

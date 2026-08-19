@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
-import { X, Check } from 'lucide-react';
 import { useNotes } from '../hooks/useNotes';
+import { useModalAnimation } from '../hooks/useModalAnimation';
+import { toast } from '../lib/toast';
 import type { Note } from '../types/note';
 
 interface EditNoteModalProps {
@@ -11,86 +12,120 @@ interface EditNoteModalProps {
 export function EditNoteModal({ note, onClose }: EditNoteModalProps) {
   const [content, setContent] = useState(note.content);
   const { updateNote } = useNotes();
+  const { isClosing, handleClose } = useModalAnimation(onClose);
 
   const handleSave = useCallback(() => {
-    if (content.trim()) {
-      updateNote(note.id, { content });
+    if (content.trim() && content.trim() !== note.content) {
+      updateNote(note.id, { content: content.trim() }, true);
+      toast.success('Note updated');
     }
-    onClose();
-  }, [content, note.id, updateNote, onClose]);
+    handleClose();
+  }, [content, note.id, note.content, updateNote, handleClose]);
 
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
-      onClick={onClose}
-    >
+    <div className={`modal-overlay ${isClosing ? 'modal-overlay--closing' : ''}`} onClick={handleClose}>
       <div
+        className="modal-content-animated"
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: 'var(--bg-card)',
-          borderRadius: '16px',
-          padding: 24,
-          width: 'min(90vw, 600px)',
-          boxShadow: 'var(--shadow-2)',
+          width: '100%',
+          maxWidth: '550px',
+          background: 'var(--bg)',
+          borderRadius: '24px',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          boxShadow: '0 16px 48px rgba(0, 0, 0, 0.15)',
+          transition: 'all 200ms ease',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>Edit note</span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={onClose}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                border: '1px solid var(--border)',
-                background: 'none',
-                cursor: 'pointer',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              <X size={18} />
-            </button>
-            <button
-              onClick={handleSave}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                border: '1px solid var(--flame)',
-                background: 'var(--flame)',
-                cursor: 'pointer',
-                color: '#fff',
-              }}
-            >
-              <Check size={18} />
-            </button>
-          </div>
-        </div>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              e.preventDefault();
+              handleSave();
+            }
+          }}
+          placeholder="Type here..."
           autoFocus
+          rows={8}
           style={{
             width: '100%',
-            minHeight: 200,
-            padding: 16,
-            fontSize: 14,
-            color: 'var(--text-primary)',
-            background: 'var(--bg)',
+            background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: 12,
-            resize: 'vertical',
-            fontFamily: 'var(--font-sans)',
-            lineHeight: 1.6,
+            borderRadius: '16px',
+            padding: '16px',
+            fontSize: '16px',
+            fontFamily: 'DM Sans, var(--font-sans)',
+            fontWeight: 400,
+            lineHeight: 1.4,
+            color: 'var(--text-primary)',
+            resize: 'none',
+            fieldSizing: 'content',
+            minHeight: 'calc(8lh + 32px)',
+            maxHeight: 'calc(12lh + 32px)',
+            overflowY: 'auto',
+            boxSizing: 'border-box',
           }}
         />
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: '16px',
+            width: '100%',
+          }}
+        >
+          <button
+            onClick={handleClose}
+            type="button"
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              fontSize: '16px',
+              fontFamily: 'Inter, var(--font-sans)',
+              fontWeight: 400,
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background-color 150ms ease, border-color 150ms ease',
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!content.trim()}
+            type="button"
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--flame)',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              fontSize: '16px',
+              fontFamily: 'Inter, var(--font-sans)',
+              fontWeight: 400,
+              color: 'var(--flame)',
+              cursor: content.trim() ? 'pointer' : 'not-allowed',
+              opacity: content.trim() ? 1 : 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'opacity 150ms ease',
+            }}
+          >
+            Save
+          </button>
+        </div>
       </div>
     </div>
   );

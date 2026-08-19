@@ -11,6 +11,7 @@ import { useNotes } from '../hooks/useNotes';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { useLayoutMode } from '../hooks/useLayoutMode';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import type { Note } from '../types/note';
 
 type ModalName = 'addNote' | 'voiceRecorder' | 'auth' | 'settings' | 'recycleBin';
@@ -54,6 +55,16 @@ export function Layout() {
   }, [dispatch]);
 
   const closeModal = useCallback(() => dispatch({ type: 'CLOSE_MODAL' }), [dispatch]);
+
+  const handleFocusSearch = useCallback(() => {
+    setSidebarOpen(true);
+    setShowSearch(true);
+  }, []);
+
+  useKeyboardShortcuts({
+    onOpenNewNote: () => openModal('addNote'),
+    onFocusSearch: handleFocusSearch,
+  });
 
   const handleToggleSearch = useCallback(() => {
     if (!sidebarOpen) {

@@ -1,17 +1,29 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
+import { toast } from '../lib/toast';
 
 export function useAuth() {
   const { state, dispatch } = useStore();
+  const prevUserRef = useRef<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       dispatch({ type: 'SET_USER', payload: session?.user ?? null });
+      if (session?.user?.email) {
+        prevUserRef.current = session.user.id;
+      }
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      dispatch({ type: 'SET_USER', payload: session?.user ?? null });
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUser = session?.user ?? null;
+      dispatch({ type: 'SET_USER', payload: newUser });
+      if (event === 'SIGNED_IN' && newUser?.email && prevUserRef.current !== newUser.id) {
+        toast.success(`Signed in as ${newUser.email}`);
+        prevUserRef.current = newUser.id;
+      } else if (event === 'SIGNED_OUT') {
+        prevUserRef.current = null;
+      }
     });
 
     return () => listener?.subscription.unsubscribe();
@@ -38,6 +50,7 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     dispatch({ type: 'SET_USER', payload: null });
+    toast.info('Signed out');
   }, [dispatch]);
 
   const sendPasswordReset = useCallback(async (email: string) => {

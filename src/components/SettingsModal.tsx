@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react';
-import { X, Sun, Moon, Monitor, Trash2, LogOut, Mail, LayoutGrid, Square, Flame, Radio, Palette, User, Info, MessageCircle, GitFork } from 'lucide-react';
+import { X, Sun, Moon, Monitor, Trash2, LogOut, Mail, LayoutGrid, Square, Flame, Radio, Palette, User, Info, MessageCircle, GitFork, Keyboard } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import { useStore } from '../lib/store';
 import { useModalAnimation } from '../hooks/useModalAnimation';
+
+import { toast } from '../lib/toast';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -66,8 +68,9 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
 
   const handleCopyEmail = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText('nutzugt@gmail.com');
+    navigator.clipboard.writeText('zadnipro.ion.187@gmail.com');
     setCopiedEmail(true);
+    toast.success('Email copied to clipboard');
     setTimeout(() => setCopiedEmail(false), 2000);
   }, []);
 
@@ -431,8 +434,8 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
               <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(249, 115, 22, 0.12)', color: 'var(--flame)', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
                 <Flame size={32} strokeWidth={2} />
               </div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Spark Notes</h3>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>Version 1.0.0 • Clean & Fast Note Taking</p>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Spark</h3>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>Version 1.0.0</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -456,7 +459,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                   <MessageCircle size={16} color="var(--text-secondary)" />
                   <span>Send feedback</span>
                 </div>
-                <span style={{ fontSize: 12, color: 'var(--flame)' }}>{copiedEmail ? 'Copied email!' : 'nutzugt@gmail.com'}</span>
+                <span style={{ fontSize: 12, color: 'var(--flame)' }}>{copiedEmail ? 'Copied email!' : 'zadnipro.ion.187@gmail.com'}</span>
               </button>
 
               <button
@@ -480,6 +483,43 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                   <span>GitHub Repository</span>
                 </div>
               </button>
+
+              <div
+                style={{
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 12,
+                  padding: '12px 14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                  marginTop: 4,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
+                  <Keyboard size={14} />
+                  <span>KEYBOARD SHORTCUTS</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text-primary)' }}>New note</span>
+                  <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>N</kbd>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text-primary)' }}>Search notes</span>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>/</kbd>
+                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl K</kbd>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text-primary)' }}>Save note</span>
+                  <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl Enter</kbd>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text-primary)' }}>Close / dismiss</span>
+                  <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Esc</kbd>
+                </div>
+              </div>
             </div>
           </div>
         </div>

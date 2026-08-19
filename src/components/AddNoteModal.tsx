@@ -114,6 +114,12 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                  e.preventDefault();
+                  handleTextConfirm();
+                }
+              }}
               placeholder="Type here..."
               autoFocus
               rows={8}

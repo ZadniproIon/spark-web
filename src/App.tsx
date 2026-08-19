@@ -1,10 +1,13 @@
 import { StoreProvider } from './lib/store';
+import { ToastProvider } from './lib/toast';
 import { Layout } from './components/Layout';
 
 function App() {
   return (
     <StoreProvider>
-      <Layout />
+      <ToastProvider>
+        <Layout />
+      </ToastProvider>
     </StoreProvider>
   );
 }
