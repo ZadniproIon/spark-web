@@ -166,11 +166,29 @@ export function useNotes() {
     }
   }, [state.notes, dispatch]);
 
+  const purgeExpiredTrashedNotes = useCallback(async () => {
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const expiredNotes = notesRef.current.filter(
+      (n) => n.isTrashed && n.trashedAt && new Date(n.trashedAt).getTime() < thirtyDaysAgo
+    );
+    if (expiredNotes.length === 0) return;
+
+    for (const note of expiredNotes) {
+      dispatch({ type: 'DELETE_NOTE', payload: note.id });
+      if (state.user && note.ownerId === state.user.id) {
+        await supabase.from('notes').delete().eq('id', note.id).eq('owner_id', state.user.id);
+      }
+    }
+  }, [state.user, dispatch]);
+
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
+    purgeExpiredTrashedNotes();
+
     const handleOnline = () => {
       syncWithRemote();
+      purgeExpiredTrashedNotes();
     };
 
     window.addEventListener('online', handleOnline);
@@ -212,7 +230,7 @@ export function useNotes() {
         supabase.removeChannel(channel);
       }
     };
-  }, [state.user?.id, claimLegacyNotes, syncWithRemote, stopSync]);
+  }, [state.user?.id, claimLegacyNotes, syncWithRemote, purgeExpiredTrashedNotes, stopSync]);
 
   const addTextNote = useCallback(async (content: string) => {
     const now = new Date();

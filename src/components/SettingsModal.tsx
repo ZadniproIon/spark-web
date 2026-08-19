@@ -1,11 +1,32 @@
-import { useState, useCallback } from 'react';
-import { X, Sun, Moon, Monitor, Trash2, LogOut, Mail, LayoutGrid, Square, Flame, Radio, Palette, User, Info, MessageCircle, GitFork, Keyboard } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import {
+  X,
+  Sun,
+  Moon,
+  Monitor,
+  Trash2,
+  LogOut,
+  Mail,
+  LayoutGrid,
+  Square,
+  Flame,
+  Palette,
+  User,
+  Info,
+  MessageCircle,
+  GitFork,
+  Keyboard,
+  ShieldCheck,
+  ChevronRight,
+  KeyRound,
+  Unlink,
+} from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import { useStore } from '../lib/store';
 import { useModalAnimation } from '../hooks/useModalAnimation';
-
+import { TermsModal } from './TermsModal';
 import { toast } from '../lib/toast';
 
 interface SettingsModalProps {
@@ -14,6 +35,7 @@ interface SettingsModalProps {
 }
 
 type TabType = 'appearance' | 'account' | 'about';
+type AccountSubView = 'main' | 'change_email' | 'change_password' | 'disconnect_google' | 'delete_confirm';
 
 function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (val: boolean) => void }) {
   return (
@@ -59,12 +81,42 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
   const { theme, setTheme } = useTheme();
   const { layoutMode, setLayoutMode } = useLayoutMode();
   const { state, dispatch } = useStore();
-  const { user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('appearance');
+  const {
+    user,
+    signOut,
+    updateEmail,
+    updatePassword,
+    disconnectGoogleIdentity,
+    deleteAccount,
+  } = useAuth();
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('appearance');
+  const [accountSubView, setAccountSubView] = useState<AccountSubView>('main');
+  const [showTerms, setShowTerms] = useState(false);
+
+  // Account subview states
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [accountActionLoading, setAccountActionLoading] = useState(false);
+  const [accountError, setAccountError] = useState<string | null>(null);
+
+  // Delete account countdown
   const [deleteCountdown, setDeleteCountdown] = useState(10);
   const [copiedEmail, setCopiedEmail] = useState(false);
+
+  const hasGoogleLinked = user?.identities?.some((id) => id.provider === 'google');
+
+  // Handle countdown timer for delete confirmation
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (accountSubView === 'delete_confirm' && deleteCountdown > 0) {
+      timer = setTimeout(() => {
+        setDeleteCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [accountSubView, deleteCountdown]);
 
   const handleCopyEmail = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -74,308 +126,717 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
     setTimeout(() => setCopiedEmail(false), 2000);
   }, []);
 
-  const handleSignOut = useCallback(async () => {
-    await signOut();
-  }, [signOut]);
+  const handleChangeEmail = useCallback(async () => {
+    if (!newEmail.trim()) {
+      setAccountError('Please enter a valid email address');
+      return;
+    }
+    setAccountError(null);
+    setAccountActionLoading(true);
+    try {
+      await updateEmail(newEmail.trim());
+      toast.success('Email update requested. Check your inbox to confirm.');
+      setAccountSubView('main');
+      setNewEmail('');
+    } catch (err) {
+      setAccountError(err instanceof Error ? err.message : 'Failed to update email');
+    } finally {
+      setAccountActionLoading(false);
+    }
+  }, [newEmail, updateEmail]);
 
-  const handleDeleteAccount = useCallback(() => {
-    setShowDeleteConfirm(true);
-    const interval = setInterval(() => {
-      setDeleteCountdown((c) => {
-        if (c <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return c - 1;
-      });
-    }, 1000);
-  }, []);
+  const handleChangePassword = useCallback(async () => {
+    if (newPassword.length < 8) {
+      setAccountError('Password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setAccountError('Passwords do not match');
+      return;
+    }
+    setAccountError(null);
+    setAccountActionLoading(true);
+    try {
+      await updatePassword(newPassword);
+      toast.success('Password updated successfully');
+      setAccountSubView('main');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setAccountError(err instanceof Error ? err.message : 'Failed to update password');
+    } finally {
+      setAccountActionLoading(false);
+    }
+  }, [newPassword, confirmPassword, updatePassword]);
+
+  const handleDisconnectGoogle = useCallback(async () => {
+    setAccountError(null);
+    setAccountActionLoading(true);
+    try {
+      await disconnectGoogleIdentity();
+      toast.info('Google sign-in disconnected');
+      setAccountSubView('main');
+    } catch (err) {
+      setAccountError(err instanceof Error ? err.message : 'Failed to disconnect Google');
+    } finally {
+      setAccountActionLoading(false);
+    }
+  }, [disconnectGoogleIdentity]);
+
+  const handleConfirmDeleteAccount = useCallback(async () => {
+    if (deleteCountdown > 0) return;
+    setAccountActionLoading(true);
+    try {
+      await deleteAccount();
+      handleClose();
+    } catch (err) {
+      setAccountError(err instanceof Error ? err.message : 'Failed to delete account');
+      setAccountActionLoading(false);
+    }
+  }, [deleteCountdown, deleteAccount, handleClose]);
 
   return (
-    <div className={`modal-overlay ${isClosing ? 'modal-overlay--closing' : ''}`} onClick={handleClose}>
-      <div
-        className="modal-content-animated"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: 'min(100%, 520px)',
-          maxHeight: '90vh',
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 24,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Header with Title & Close */}
+    <>
+      <div className={`modal-overlay ${isClosing ? 'modal-overlay--closing' : ''}`} onClick={handleClose}>
         <div
+          className="modal-content-animated"
+          onClick={(e) => e.stopPropagation()}
           style={{
-            padding: '20px 24px 14px',
+            width: 'min(100%, 520px)',
+            background: 'var(--bg-card)',
+            borderRadius: '24px',
+            padding: '24px',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)',
+            border: '1px solid var(--border)',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
+            gap: '20px',
           }}
         >
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            Settings
-          </h2>
-          <button className="modal-close-btn" onClick={handleClose} aria-label="Close settings">
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Top Segmented Pill Bar */}
-        <div style={{ padding: '0 24px 16px' }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: 6,
-              background: 'var(--bg)',
-              padding: 4,
-              borderRadius: 12,
-              border: '1px solid var(--border)',
-            }}
-          >
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Settings</span>
             <button
+              onClick={handleClose}
               type="button"
-              onClick={() => setActiveTab('appearance')}
               style={{
-                padding: '8px 12px',
-                borderRadius: 9,
-                fontSize: 13,
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                background: activeTab === 'appearance' ? 'var(--flame)' : 'transparent',
-                color: activeTab === 'appearance' ? '#fff' : 'var(--text-secondary)',
-                border: 'none',
-                boxShadow: activeTab === 'appearance' ? '0 2px 10px rgba(249, 115, 22, 0.3)' : 'none',
-                transition: 'all 180ms ease',
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: 'var(--bg)',
+                border: '1px solid var(--border)',
+                display: 'grid',
+                placeItems: 'center',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
               }}
             >
-              <Palette size={14} />
-              <span>Appearance</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('account')}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 9,
-                fontSize: 13,
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                background: activeTab === 'account' ? 'var(--flame)' : 'transparent',
-                color: activeTab === 'account' ? '#fff' : 'var(--text-secondary)',
-                border: 'none',
-                boxShadow: activeTab === 'account' ? '0 2px 10px rgba(249, 115, 22, 0.3)' : 'none',
-                transition: 'all 180ms ease',
-              }}
-            >
-              <User size={14} />
-              <span>Account</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('about')}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 9,
-                fontSize: 13,
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                background: activeTab === 'about' ? 'var(--flame)' : 'transparent',
-                color: activeTab === 'about' ? '#fff' : 'var(--text-secondary)',
-                border: 'none',
-                boxShadow: activeTab === 'about' ? '0 2px 10px rgba(249, 115, 22, 0.3)' : 'none',
-                transition: 'all 180ms ease',
-              }}
-            >
-              <Info size={14} />
-              <span>About</span>
+              <X size={16} />
             </button>
           </div>
-        </div>
 
-        {/* Tab Content Panel (Grid stacked so tallest tab determines height naturally) */}
-        <div style={{ flex: 1, padding: '8px 24px 24px', display: 'grid', gridTemplateColumns: '1fr', overflowY: 'auto' }}>
-          {/* Appearance Panel */}
+          {/* Top Segmented Tabs Switcher */}
           <div
             style={{
-              gridArea: '1 / 1 / 2 / 2',
               display: 'flex',
-              flexDirection: 'column',
-              gap: 18,
-              visibility: activeTab === 'appearance' ? 'visible' : 'hidden',
-              opacity: activeTab === 'appearance' ? 1 : 0,
-              pointerEvents: activeTab === 'appearance' ? 'auto' : 'none',
-              transition: 'opacity 150ms ease',
+              background: 'var(--bg)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '4px',
+              gap: '4px',
             }}
           >
-            {/* Theme Row */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Theme Selector</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                {(['dark', 'light', 'system'] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTheme(t)}
+            {(
+              [
+                { id: 'appearance', label: 'Appearance', icon: Palette },
+                { id: 'account', label: 'Account', icon: User },
+                { id: 'about', label: 'About', icon: Info },
+              ] as const
+            ).map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setAccountSubView('main');
+                    setAccountError(null);
+                  }}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isActive ? 'var(--bg-card)' : 'transparent',
+                    color: isActive ? 'var(--flame)' : 'var(--text-secondary)',
+                    fontWeight: isActive ? 600 : 500,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 150ms ease',
+                  }}
+                >
+                  <Icon size={16} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Stacked Panels */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
+            {/* Appearance Panel */}
+            <div
+              style={{
+                gridArea: '1 / 1 / 2 / 2',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                visibility: activeTab === 'appearance' ? 'visible' : 'hidden',
+                opacity: activeTab === 'appearance' ? 1 : 0,
+                pointerEvents: activeTab === 'appearance' ? 'auto' : 'none',
+                transition: 'opacity 150ms ease',
+              }}
+            >
+              {/* Theme Section */}
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 14 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>Theme</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {(
+                    [
+                      { id: 'dark', label: 'Dark', icon: Moon },
+                      { id: 'light', label: 'Light', icon: Sun },
+                      { id: 'system', label: 'System', icon: Monitor },
+                    ] as const
+                  ).map((item) => {
+                    const Icon = item.icon;
+                    const isSelected = theme === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setTheme(item.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                          padding: '10px 8px',
+                          borderRadius: 10,
+                          border: `1px solid ${isSelected ? 'var(--flame)' : 'var(--border)'}`,
+                          background: isSelected ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-card)',
+                          color: isSelected ? 'var(--flame)' : 'var(--text-secondary)',
+                          fontSize: 13,
+                          fontWeight: isSelected ? 600 : 400,
+                          cursor: 'pointer',
+                          transition: 'all 150ms ease',
+                        }}
+                      >
+                        <Icon size={15} />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Layout Mode */}
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 14 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>Layout Mode</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                  {(
+                    [
+                      { id: '1col', label: '1 Column', icon: Square },
+                      { id: 'masonry', label: 'Masonry', icon: LayoutGrid },
+                    ] as const
+                  ).map((item) => {
+                    const Icon = item.icon;
+                    const isSelected = layoutMode === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setLayoutMode(item.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                          padding: '10px 8px',
+                          borderRadius: 10,
+                          border: `1px solid ${isSelected ? 'var(--flame)' : 'var(--border)'}`,
+                          background: isSelected ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-card)',
+                          color: isSelected ? 'var(--flame)' : 'var(--text-secondary)',
+                          fontSize: 13,
+                          fontWeight: isSelected ? 600 : 400,
+                          cursor: 'pointer',
+                          transition: 'all 150ms ease',
+                        }}
+                      >
+                        <Icon size={15} />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Auto-Hide Green Sync Dot */}
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />
+                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>Auto-hide green dot</span>
+                  </div>
+                  <ToggleSwitch
+                    checked={state.autoHideSyncDot}
+                    onChange={(val) => dispatch({ type: 'SET_AUTO_HIDE_SYNC_DOT', payload: val })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Account Panel */}
+            <div
+              style={{
+                gridArea: '1 / 1 / 2 / 2',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                visibility: activeTab === 'account' ? 'visible' : 'hidden',
+                opacity: activeTab === 'account' ? 1 : 0,
+                pointerEvents: activeTab === 'account' ? 'auto' : 'none',
+                transition: 'opacity 150ms ease',
+              }}
+            >
+              {/* Profile Card */}
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(249, 115, 22, 0.1)', display: 'grid', placeItems: 'center', color: 'var(--flame)' }}>
+                  <User size={20} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user ? user.email : 'Guest Session'}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                    {user ? 'Cloud sync active across all devices' : 'Notes stored only on this browser'}
+                  </div>
+                </div>
+              </div>
+
+              {!user ? (
+                <button
+                  type="button"
+                  onClick={onOpenAuth}
+                  style={{
+                    padding: '12px',
+                    borderRadius: 12,
+                    background: 'var(--flame)',
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Mail size={16} />
+                  <span>Sign in / Create account</span>
+                </button>
+              ) : accountSubView === 'change_email' ? (
+                /* Subview: Change Email */
+                <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <Mail size={16} color="var(--flame)" />
+                    <span>Change email address</span>
+                  </div>
+                  <input
+                    type="email"
+                    placeholder="New email address"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
                     style={{
-                      padding: '10px',
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--border)',
                       borderRadius: 10,
-                      border: theme === t ? '1.5px solid var(--flame)' : '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                      fontSize: 13,
+                    }}
+                  />
+                  {accountError && <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{accountError}</p>}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setAccountSubView('main'); setAccountError(null); }}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        borderRadius: 8,
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-secondary)',
+                        fontSize: 13,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={accountActionLoading}
+                      onClick={handleChangeEmail}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        borderRadius: 8,
+                        background: 'var(--flame)',
+                        border: 'none',
+                        color: '#fff',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: accountActionLoading ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {accountActionLoading ? 'Sending...' : 'Update Email'}
+                    </button>
+                  </div>
+                </div>
+              ) : accountSubView === 'change_password' ? (
+                /* Subview: Change Password */
+                <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <KeyRound size={16} color="var(--flame)" />
+                    <span>Change password</span>
+                  </div>
+                  <input
+                    type="password"
+                    placeholder="New password (min. 8 characters)"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 10,
+                      color: 'var(--text-primary)',
+                      fontSize: 13,
+                    }}
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 10,
+                      color: 'var(--text-primary)',
+                      fontSize: 13,
+                    }}
+                  />
+                  {accountError && <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{accountError}</p>}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setAccountSubView('main'); setAccountError(null); }}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        borderRadius: 8,
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-secondary)',
+                        fontSize: 13,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={accountActionLoading}
+                      onClick={handleChangePassword}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        borderRadius: 8,
+                        background: 'var(--flame)',
+                        border: 'none',
+                        color: '#fff',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: accountActionLoading ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {accountActionLoading ? 'Updating...' : 'Update Password'}
+                    </button>
+                  </div>
+                </div>
+              ) : accountSubView === 'disconnect_google' ? (
+                /* Subview: Disconnect Google */
+                <div style={{ background: 'var(--bg)', border: '1px solid rgba(225, 29, 72, 0.2)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--red)' }}>
+                    <Unlink size={16} />
+                    <span>Disconnect Google sign-in</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                    After disconnecting, this account will no longer accept Google authentication. Make sure you have a password set to log in.
+                  </p>
+                  {accountError && <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{accountError}</p>}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setAccountSubView('main'); setAccountError(null); }}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        borderRadius: 8,
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-secondary)',
+                        fontSize: 13,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={accountActionLoading}
+                      onClick={handleDisconnectGoogle}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        borderRadius: 8,
+                        background: 'var(--red)',
+                        border: 'none',
+                        color: '#fff',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: accountActionLoading ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {accountActionLoading ? 'Disconnecting...' : 'Disconnect'}
+                    </button>
+                  </div>
+                </div>
+              ) : accountSubView === 'delete_confirm' ? (
+                /* Subview: Delete Account Countdown */
+                <div style={{ background: 'var(--bg)', border: '1px solid rgba(225, 29, 72, 0.3)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--red)' }}>
+                    <Trash2 size={16} />
+                    <span>Permanent Account Deletion</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                    This action is permanent and irreversible. All your cloud notes and audio files will be deleted forever.
+                  </p>
+                  {accountError && <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{accountError}</p>}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setAccountSubView('main'); setDeleteCountdown(10); setAccountError(null); }}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        borderRadius: 8,
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-secondary)',
+                        fontSize: 13,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={deleteCountdown > 0 || accountActionLoading}
+                      onClick={handleConfirmDeleteAccount}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        borderRadius: 8,
+                        background: deleteCountdown > 0 ? 'rgba(225, 29, 72, 0.2)' : 'var(--red)',
+                        border: 'none',
+                        color: '#fff',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: deleteCountdown > 0 || accountActionLoading ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {deleteCountdown > 0 ? `Wait ${deleteCountdown}s` : accountActionLoading ? 'Deleting...' : 'Delete Account'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Default Main Account Actions */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => { setAccountSubView('change_email'); setAccountError(null); }}
+                    style={{
+                      padding: '11px 14px',
+                      borderRadius: 10,
                       background: 'var(--bg)',
-                      color: theme === t ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)',
                       fontSize: 13,
                       fontWeight: 500,
                       display: 'flex',
-                      flexDirection: 'column',
                       alignItems: 'center',
-                      gap: 6,
-                      transition: 'all 150ms ease',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
                     }}
                   >
-                    {t === 'dark' && <Moon size={16} color={theme === t ? 'var(--flame)' : undefined} />}
-                    {t === 'light' && <Sun size={16} color={theme === t ? 'var(--flame)' : undefined} />}
-                    {t === 'system' && <Monitor size={16} color={theme === t ? 'var(--flame)' : undefined} />}
-                    <span style={{ textTransform: 'capitalize' }}>{t}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Mail size={16} color="var(--text-secondary)" />
+                      <span>Change email</span>
+                    </div>
+                    <ChevronRight size={15} color="var(--text-secondary)" />
                   </button>
-                ))}
-              </div>
+
+                  <button
+                    type="button"
+                    onClick={() => { setAccountSubView('change_password'); setAccountError(null); }}
+                    style={{
+                      padding: '11px 14px',
+                      borderRadius: 10,
+                      background: 'var(--bg)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <KeyRound size={16} color="var(--text-secondary)" />
+                      <span>Change password</span>
+                    </div>
+                    <ChevronRight size={15} color="var(--text-secondary)" />
+                  </button>
+
+                  {hasGoogleLinked && (
+                    <button
+                      type="button"
+                      onClick={() => { setAccountSubView('disconnect_google'); setAccountError(null); }}
+                      style={{
+                        padding: '11px 14px',
+                        borderRadius: 10,
+                        background: 'var(--bg)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-primary)',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Unlink size={16} color="var(--text-secondary)" />
+                        <span>Disconnect Google sign-in</span>
+                      </div>
+                      <ChevronRight size={15} color="var(--text-secondary)" />
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    style={{
+                      padding: '11px 14px',
+                      borderRadius: 10,
+                      background: 'var(--bg)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <LogOut size={16} color="var(--text-secondary)" />
+                      <span>Sign out</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setAccountSubView('delete_confirm'); setDeleteCountdown(10); setAccountError(null); }}
+                    style={{
+                      padding: '11px 14px',
+                      borderRadius: 10,
+                      background: 'rgba(225, 29, 72, 0.08)',
+                      border: '1px solid rgba(225, 29, 72, 0.2)',
+                      color: 'var(--red)',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      marginTop: 4,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Trash2 size={16} />
+                      <span>Delete account</span>
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Note View Layout */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Layout Mode</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+            {/* About Panel */}
+            <div
+              style={{
+                gridArea: '1 / 1 / 2 / 2',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                visibility: activeTab === 'about' ? 'visible' : 'hidden',
+                opacity: activeTab === 'about' ? 1 : 0,
+                pointerEvents: activeTab === 'about' ? 'auto' : 'none',
+                transition: 'opacity 150ms ease',
+              }}
+            >
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(249, 115, 22, 0.12)', color: 'var(--flame)', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
+                  <Flame size={32} strokeWidth={2} />
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Spark</h3>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, margin: 0 }}>Version 1.0.0</p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button
                   type="button"
-                  onClick={() => setLayoutMode('1col')}
+                  onClick={handleCopyEmail}
                   style={{
-                    padding: '10px',
-                    borderRadius: 10,
-                    border: layoutMode === '1col' ? '1.5px solid var(--flame)' : '1px solid var(--border)',
-                    background: 'var(--bg)',
-                    color: layoutMode === '1col' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <Square size={16} color={layoutMode === '1col' ? 'var(--flame)' : undefined} />
-                  <span>1 Column</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLayoutMode('masonry')}
-                  style={{
-                    padding: '10px',
-                    borderRadius: 10,
-                    border: layoutMode === 'masonry' ? '1.5px solid var(--flame)' : '1px solid var(--border)',
-                    background: 'var(--bg)',
-                    color: layoutMode === 'masonry' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <LayoutGrid size={16} color={layoutMode === 'masonry' ? 'var(--flame)' : undefined} />
-                  <span>Masonry Grid</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Interface Options */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Sync Options</label>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)', padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Radio size={16} color="var(--text-secondary)" />
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>Auto-hide green sync dot</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Fade green indicator 5s after sync</div>
-                  </div>
-                </div>
-                <ToggleSwitch
-                  checked={state.autoHideSyncDot}
-                  onChange={(val) => dispatch({ type: 'SET_AUTO_HIDE_SYNC_DOT', payload: val })}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Account Panel */}
-          <div
-            style={{
-              gridArea: '1 / 1 / 2 / 2',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-              visibility: activeTab === 'account' ? 'visible' : 'hidden',
-              opacity: activeTab === 'account' ? 1 : 0,
-              pointerEvents: activeTab === 'account' ? 'auto' : 'none',
-              transition: 'opacity 150ms ease',
-            }}
-          >
-            <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(249, 115, 22, 0.1)', display: 'grid', placeItems: 'center', color: 'var(--flame)' }}>
-                <User size={20} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {user ? user.email : 'Guest Session'}
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                  {user ? 'Cloud sync active across all devices' : 'Notes stored only on this browser'}
-                </div>
-              </div>
-            </div>
-
-            {!user ? (
-              <button
-                type="button"
-                onClick={onOpenAuth}
-                style={{
-                  padding: '12px',
-                  borderRadius: 12,
-                  background: 'var(--flame)',
-                  color: '#fff',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                }}
-              >
-                <Mail size={16} />
-                <span>Sign in / Create account</span>
-              </button>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  style={{
-                    padding: '10px 14px',
+                    padding: '12px 14px',
                     borderRadius: 10,
                     background: 'var(--bg)',
                     border: '1px solid var(--border)',
@@ -385,145 +846,107 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    cursor: 'pointer',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <LogOut size={16} color="var(--text-secondary)" />
-                    <span>Sign out of account</span>
+                    <MessageCircle size={16} color="var(--text-secondary)" />
+                    <span>Send feedback</span>
                   </div>
+                  <span style={{ fontSize: 12, color: 'var(--flame)' }}>{copiedEmail ? 'Copied email!' : 'zadnipro.ion.187@gmail.com'}</span>
                 </button>
+
                 <button
                   type="button"
-                  onClick={handleDeleteAccount}
+                  onClick={() => setShowTerms(true)}
                   style={{
-                    padding: '10px 14px',
+                    padding: '12px 14px',
                     borderRadius: 10,
-                    background: 'rgba(225, 29, 72, 0.08)',
-                    border: '1px solid rgba(225, 29, 72, 0.2)',
-                    color: 'var(--red)',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                     fontWeight: 500,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    cursor: 'pointer',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Trash2 size={16} />
-                    <span>{showDeleteConfirm ? (deleteCountdown > 0 ? `Confirm delete in ${deleteCountdown}s...` : 'Deleting...') : 'Delete account'}</span>
+                    <ShieldCheck size={16} color="var(--text-secondary)" />
+                    <span>Terms & Conditions</span>
+                  </div>
+                  <ChevronRight size={15} color="var(--text-secondary)" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => window.open('https://github.com/ZadniproIon/spark-web', '_blank', 'noopener,noreferrer')}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <GitFork size={16} color="var(--text-secondary)" />
+                    <span>GitHub Repository</span>
                   </div>
                 </button>
-              </div>
-            )}
-          </div>
 
-          {/* About Panel */}
-          <div
-            style={{
-              gridArea: '1 / 1 / 2 / 2',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-              visibility: activeTab === 'about' ? 'visible' : 'hidden',
-              opacity: activeTab === 'about' ? 1 : 0,
-              pointerEvents: activeTab === 'about' ? 'auto' : 'none',
-              transition: 'opacity 150ms ease',
-            }}
-          >
-            <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(249, 115, 22, 0.12)', color: 'var(--flame)', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
-                <Flame size={32} strokeWidth={2} />
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Spark</h3>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>Version 1.0.0</p>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button
-                type="button"
-                onClick={handleCopyEmail}
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  background: 'var(--bg)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-primary)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <MessageCircle size={16} color="var(--text-secondary)" />
-                  <span>Send feedback</span>
-                </div>
-                <span style={{ fontSize: 12, color: 'var(--flame)' }}>{copiedEmail ? 'Copied email!' : 'zadnipro.ion.187@gmail.com'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => window.open('https://github.com/ZadniproIon/spark-web', '_blank', 'noopener,noreferrer')}
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  background: 'var(--bg)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-primary)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <GitFork size={16} color="var(--text-secondary)" />
-                  <span>GitHub Repository</span>
-                </div>
-              </button>
-
-              <div
-                style={{
-                  background: 'var(--bg)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 12,
-                  padding: '12px 14px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 10,
-                  marginTop: 4,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
-                  <Keyboard size={14} />
-                  <span>KEYBOARD SHORTCUTS</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-                  <span style={{ color: 'var(--text-primary)' }}>New note</span>
-                  <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>N</kbd>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-                  <span style={{ color: 'var(--text-primary)' }}>Search notes</span>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>/</kbd>
-                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl K</kbd>
+                {/* Keyboard Shortcuts reference */}
+                <div
+                  style={{
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 12,
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                    marginTop: 4,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
+                    <Keyboard size={14} />
+                    <span>KEYBOARD SHORTCUTS</span>
                   </div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-                  <span style={{ color: 'var(--text-primary)' }}>Save note</span>
-                  <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl Enter</kbd>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-                  <span style={{ color: 'var(--text-primary)' }}>Close / dismiss</span>
-                  <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Esc</kbd>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                    <span style={{ color: 'var(--text-primary)' }}>New note</span>
+                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>N</kbd>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                    <span style={{ color: 'var(--text-primary)' }}>Search notes</span>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>/</kbd>
+                      <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl K</kbd>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                    <span style={{ color: 'var(--text-primary)' }}>Save note</span>
+                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl Enter</kbd>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                    <span style={{ color: 'var(--text-primary)' }}>Close / dismiss</span>
+                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Esc</kbd>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+    </>
   );
 }

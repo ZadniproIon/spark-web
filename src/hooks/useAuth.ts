@@ -70,6 +70,28 @@ export function useAuth() {
     if (error) throw error;
   }, []);
 
+  const disconnectGoogleIdentity = useCallback(async () => {
+    const user = state.user;
+    if (!user) return;
+    const googleIdentity = user.identities?.find((id) => id.provider === 'google');
+    if (!googleIdentity) throw new Error('No Google identity linked to this account.');
+    const { error } = await supabase.auth.unlinkIdentity(googleIdentity);
+    if (error) throw error;
+    const { data: { user: updatedUser } } = await supabase.auth.getUser();
+    dispatch({ type: 'SET_USER', payload: updatedUser });
+  }, [state.user, dispatch]);
+
+  const deleteAccount = useCallback(async () => {
+    const user = state.user;
+    if (!user) return;
+    await supabase.from('notes').delete().eq('owner_id', user.id);
+    await supabase.auth.signOut();
+    dispatch({ type: 'SET_USER', payload: null });
+    dispatch({ type: 'SET_NOTES', payload: [] });
+    localStorage.removeItem('spark_notes');
+    toast.info('Account and data deleted');
+  }, [state.user, dispatch]);
+
   return {
     user: state.user,
     signInWithGoogle,
@@ -79,5 +101,7 @@ export function useAuth() {
     sendPasswordReset,
     updatePassword,
     updateEmail,
+    disconnectGoogleIdentity,
+    deleteAccount,
   };
 }

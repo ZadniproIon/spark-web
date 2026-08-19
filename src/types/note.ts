@@ -31,6 +31,7 @@ export type ModalType =
   | 'changeEmail'
   | 'changePassword'
   | 'deleteAccount'
+  | 'terms'
   | null;
 
 export interface ModalState {
