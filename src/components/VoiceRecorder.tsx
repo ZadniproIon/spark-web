@@ -14,7 +14,7 @@ function formatTime(seconds: number): string {
 }
 
 export function VoiceRecorder({ onSave, onClose }: VoiceRecorderProps) {
-  const { isRecording, isPaused, duration, amplitude, start, stop, pause, resume } = useAudioRecorder();
+  const { isRecording, isPaused, duration, waveform, start, stop, pause, resume } = useAudioRecorder();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const previewAudio = useRef<HTMLAudioElement | null>(null);
@@ -57,8 +57,6 @@ export function VoiceRecorder({ onSave, onClose }: VoiceRecorderProps) {
     }
   }, [previewUrl, isPlayingPreview]);
 
-  const bars = 24;
-
   return (
     <div
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000 }}
@@ -90,10 +88,8 @@ export function VoiceRecorder({ onSave, onClose }: VoiceRecorderProps) {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 3, height: 60, marginBottom: 24 }}>
-          {Array.from({ length: bars }).map((_, i) => {
-            const center = bars / 2;
-            const distFromCenter = Math.abs(i - center) / center;
-            const barHeight = isRecording ? Math.max(4, amplitude * 60 * (1 - distFromCenter * 0.7) + 4) : 8;
+          {waveform.map((val, i) => {
+            const barHeight = isRecording ? Math.max(4, Math.min(56, val * 52 + 4)) : 8;
             return (
               <div
                 key={i}
@@ -101,9 +97,9 @@ export function VoiceRecorder({ onSave, onClose }: VoiceRecorderProps) {
                   width: 4,
                   height: barHeight,
                   borderRadius: 2,
-                  background: isRecording ? 'var(--flame)' : 'var(--border)',
-                  transition: 'height 100ms ease-out',
-                  opacity: isRecording ? 0.8 : 0.4,
+                  background: isRecording && val > 0.04 ? 'var(--flame)' : 'var(--border)',
+                  transition: 'height 40ms ease-out',
+                  opacity: isRecording ? 0.9 : 0.4,
                 }}
               />
             );

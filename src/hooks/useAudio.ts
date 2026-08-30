@@ -50,6 +50,7 @@ export function useAudioRecorder() {
   const [isPaused, setIsPaused] = useState(false);
   const [duration, setDuration] = useState(0);
   const [amplitude, setAmplitude] = useState(0);
+  const [waveform, setWaveform] = useState<number[]>(() => new Array(24).fill(0));
 
   const startTimeRef = useRef<number>(0);
   const pausedDurationRef = useRef<number>(0);
@@ -58,7 +59,9 @@ export function useAudioRecorder() {
   const animFrameRef = useRef<number | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
   const stopAudioContext = useCallback(() => {
     if (animFrameRef.current) {
@@ -69,24 +72,59 @@ export function useAudioRecorder() {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
+    if (gainNodeRef.current) {
+      try {
+        gainNodeRef.current.disconnect();
+      } catch (_) {}
+      gainNodeRef.current = null;
+    }
+    if (sourceNodeRef.current) {
+      try {
+        sourceNodeRef.current.disconnect();
+      } catch (_) {}
+      sourceNodeRef.current = null;
+    }
+    if (analyserRef.current) {
+      try {
+        analyserRef.current.disconnect();
+      } catch (_) {}
+      analyserRef.current = null;
+    }
     if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
       audioContextRef.current.close().catch(() => {});
       audioContextRef.current = null;
     }
-    analyserRef.current = null;
   }, []);
 
   const updateAmplitude = useCallback(() => {
-    if (analyserRef.current) {
-      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-      analyserRef.current.getByteFrequencyData(dataArray);
-      let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
+    const analyser = analyserRef.current;
+    const ctx = audioContextRef.current;
+
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    if (analyser && ctx && ctx.state === 'running') {
+      const binCount = analyser.frequencyBinCount;
+      const freqData = new Uint8Array(binCount);
+      analyser.getByteFrequencyData(freqData);
+
+      let total = 0;
+      for (let i = 0; i < binCount; i++) {
+        total += freqData[i];
       }
-      const avg = sum / dataArray.length;
-      const normalized = Math.min(1, Math.max(0, avg / 128));
-      setAmplitude((prev) => prev * 0.7 + normalized * 0.3);
+      const avg = total / binCount;
+      const normalizedAmp = Math.min(1, avg / 128);
+
+      const barCount = 24;
+      const newWave = new Array(barCount);
+      for (let i = 0; i < barCount; i++) {
+        const binIdx = Math.min(binCount - 1, Math.floor(1 + (i / barCount) * (binCount * 0.7)));
+        newWave[i] = freqData[binIdx] / 255;
+      }
+
+      setAmplitude(normalizedAmp);
+      setWaveform(newWave);
     }
     animFrameRef.current = requestAnimationFrame(updateAmplitude);
   }, []);
@@ -132,16 +170,34 @@ export function useAudioRecorder() {
       setIsPaused(false);
       setDuration(0);
       setAmplitude(0);
+      setWaveform(new Array(24).fill(0));
 
       try {
         const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         const audioCtx = new AudioCtx();
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume();
+        }
+
         const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 64;
+        analyser.fftSize = 128;
+        analyser.smoothingTimeConstant = 0.4;
+        analyser.minDecibels = -90;
+        analyser.maxDecibels = -15;
+
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = 0;
+
         const source = audioCtx.createMediaStreamSource(stream);
         source.connect(analyser);
+        analyser.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
         audioContextRef.current = audioCtx;
+        sourceNodeRef.current = source;
         analyserRef.current = analyser;
+        gainNodeRef.current = gainNode;
+
         updateAmplitude();
       } catch (err) {
         console.warn('AudioContext setup failed:', err);
@@ -160,7 +216,11 @@ export function useAudioRecorder() {
       pauseStartTimeRef.current = Date.now();
       setIsPaused(true);
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (audioContextRef.current && audioContextRef.current.state === 'running') {
+        audioContextRef.current.suspend().catch(() => {});
+      }
       setAmplitude(0);
+      setWaveform(new Array(24).fill(0));
     }
   }, []);
 
@@ -170,6 +230,9 @@ export function useAudioRecorder() {
       if (pauseStartTimeRef.current) {
         pausedDurationRef.current += Date.now() - pauseStartTimeRef.current;
         pauseStartTimeRef.current = 0;
+      }
+      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume().catch(() => {});
       }
       setIsPaused(false);
       startTimer();
@@ -213,6 +276,8 @@ export function useAudioRecorder() {
         }
         setIsRecording(false);
         setIsPaused(false);
+        setAmplitude(0);
+        setWaveform(new Array(24).fill(0));
         resolve({ blob: finalBlob, duration: finalDuration });
       };
 
@@ -246,6 +311,7 @@ export function useAudioRecorder() {
     setIsPaused(false);
     setDuration(0);
     setAmplitude(0);
+    setWaveform(new Array(24).fill(0));
     chunksRef.current = [];
   }, [stopAudioContext]);
 
@@ -258,7 +324,7 @@ export function useAudioRecorder() {
     };
   }, [stopAudioContext]);
 
-  return { isRecording, isPaused, duration, amplitude, start, stop, pause, resume, cancel };
+  return { isRecording, isPaused, duration, amplitude, waveform, start, stop, pause, resume, cancel };
 }
 
 export function useAudioPlayer() {

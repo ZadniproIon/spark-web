@@ -35,6 +35,7 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
     isPaused,
     duration,
     amplitude,
+    waveform,
     start: startRecording,
     stop: stopRecording,
     pause: pauseRecording,
@@ -89,7 +90,6 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
     }
   }, [isSavingVoice, stopRecording, addVoiceNote, duration, handleClose]);
 
-  const bars = 24;
 
   return (
     <div className={`modal-overlay ${isClosing ? 'modal-overlay--closing' : ''}`} onClick={handleClose}>
@@ -289,11 +289,9 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                 height: '48px',
               }}
             >
-              {Array.from({ length: bars }).map((_, i) => {
-                const center = bars / 2;
-                const distFromCenter = Math.abs(i - center) / center;
+              {waveform.map((val, i) => {
                 const barHeight = isRecording && !isPaused
-                  ? Math.max(6, amplitude * 48 * (1 - distFromCenter * 0.6) + Math.random() * 4 + 4)
+                  ? Math.max(6, Math.min(46, val * 44 + 4))
                   : 6;
                 return (
                   <div
@@ -302,8 +300,8 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                       width: '4px',
                       height: `${barHeight}px`,
                       borderRadius: '2px',
-                      background: isRecording && !isPaused ? 'var(--flame)' : 'var(--border)',
-                      transition: 'height 80ms ease-out, background-color 150ms ease',
+                      background: isRecording && !isPaused && val > 0.04 ? 'var(--flame)' : 'var(--border)',
+                      transition: 'height 40ms ease-out, background-color 150ms ease',
                     }}
                   />
                 );
