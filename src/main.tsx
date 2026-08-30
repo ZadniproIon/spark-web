@@ -34,9 +34,17 @@ async function initApp() {
     }
     window.history.replaceState(null, '', window.location.pathname);
   } else {
-    await supabase.auth.getSession();
     const { data: { session } } = await supabase.auth.getSession();
-    console.log('[Spark] Existing session:', session?.user?.email ?? 'none');
+    if (session) {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        console.warn('[Spark] Stale or deleted session found on startup, purging...');
+        await supabase.auth.signOut().catch(() => {});
+        localStorage.removeItem('spark_notes');
+      } else {
+        console.log('[Spark] Verified active session:', user.email);
+      }
+    }
   }
 
   const rootElement = document.getElementById('root')!;

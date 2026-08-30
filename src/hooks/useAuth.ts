@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useStore } from '../lib/store';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseConfig } from '../lib/supabase';
 import { toast } from '../lib/toast';
 
 export function useAuth() {
@@ -61,12 +61,37 @@ export function useAuth() {
   const deleteAccount = useCallback(async () => {
     const user = state.user;
     if (!user) return;
-    await supabase.from('notes').delete().eq('owner_id', user.id);
-    await supabase.auth.signOut();
+
+    // 1. Delete user notes from public.notes
+    const { error: notesError } = await supabase.from('notes').delete().eq('owner_id', user.id);
+    if (notesError) {
+      console.warn('Failed to delete user notes:', notesError);
+    }
+
+    // 2. Remove audio files in user folder from voice storage bucket
+    try {
+      const { data: files } = await supabase.storage.from(supabaseConfig.voiceBucket).list(user.id);
+      if (files && files.length > 0) {
+        const filePaths = files.map((f) => `${user.id}/${f.name}`);
+        await supabase.storage.from(supabaseConfig.voiceBucket).remove(filePaths);
+      }
+    } catch (e) {
+      console.warn('Storage cleanup during account deletion failed:', e);
+    }
+
+    // 3. Delete user from auth.users via RPC
+    const { error: rpcError } = await supabase.rpc('delete_user');
+    if (rpcError) {
+      console.error('Failed to delete account from auth.users:', rpcError);
+      throw new Error(rpcError.message || 'Failed to permanently delete user account');
+    }
+
+    // 4. Sign out and clear all local state
+    await supabase.auth.signOut().catch(() => {});
     dispatch({ type: 'SET_USER', payload: null });
     dispatch({ type: 'SET_NOTES', payload: [] });
     localStorage.removeItem('spark_notes');
-    toast.info('Account and data deleted');
+    toast.info('Account and all data permanently deleted');
   }, [state.user, dispatch]);
 
   return {

@@ -65,6 +65,15 @@ export function useNotes() {
 
       if (error) {
         console.error('[Spark] Sync fetch error:', error);
+        if (error.code === 'PGRST301' || error.message?.includes('JWT') || error.message?.includes('unauthorized') || error.code === '401') {
+          const { data: { user: verifiedUser } } = await supabase.auth.getUser();
+          if (!verifiedUser) {
+            await supabase.auth.signOut().catch(() => {});
+            dispatch({ type: 'SET_USER', payload: null });
+            dispatch({ type: 'SET_NOTES', payload: [] });
+            localStorage.removeItem('spark_notes');
+          }
+        }
         return;
       }
 

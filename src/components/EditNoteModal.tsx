@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { Mic } from 'lucide-react';
 import { useNotes } from '../hooks/useNotes';
 import { useModalAnimation } from '../hooks/useModalAnimation';
 import { toast } from '../lib/toast';
@@ -42,9 +41,8 @@ export function EditNoteModal({ note, onClose }: EditNoteModalProps) {
         }}
       >
         {note.type === 'voice' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--flame)', fontSize: 13, fontWeight: 500 }}>
-            <Mic size={15} />
-            <span>Voice note text content</span>
+          <div style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500 }}>
+            Voice note text content
           </div>
         )}
         <textarea

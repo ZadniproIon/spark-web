@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { X, Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react';
+import { X, Play, Pause, SkipBack, SkipForward, Download, Loader2 } from 'lucide-react';
+import { useModalAnimation } from '../hooks/useModalAnimation';
 import { downloadVoiceNoteAudio, resolveVoiceUrl } from '../lib/audioDownload';
 import type { Note } from '../types/note';
 
@@ -16,6 +17,7 @@ function formatTime(seconds: number): string {
 }
 
 export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
+  const { isClosing, handleClose } = useModalAnimation(onClose);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -199,109 +201,203 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000 }}
-      onClick={onClose}
+      className={`modal-overlay ${isClosing ? 'modal-overlay--closing' : ''}`}
+      onClick={handleClose}
     >
       <div
+        className="modal-content-animated"
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: 'var(--bg-card)',
-          borderRadius: '32px 32px 0 0',
-          padding: '24px 32px 40px',
-          width: 'min(100%, 500px)',
-          boxShadow: 'var(--shadow-2)',
+          width: '100%',
+          maxWidth: '520px',
+          background: 'var(--bg)',
+          borderRadius: '24px',
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          boxShadow: '0 16px 48px rgba(0, 0, 0, 0.15)',
+          border: '1px solid var(--border)',
+          transition: 'all 200ms ease',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>Voice note</span>
-          <button onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
+            Voice Note
+          </span>
+          <button
+            onClick={handleClose}
+            type="button"
+            title="Close"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              border: '1px solid var(--border)',
+              background: 'var(--bg-card)',
+              color: 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'background-color 150ms ease, color 150ms ease',
+            }}
+          >
             <X size={18} />
           </button>
         </div>
 
+        {note.content && (
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: '14px',
+              padding: '14px 16px',
+              fontSize: '15px',
+              lineHeight: 1.5,
+              color: 'var(--text-primary)',
+              fontFamily: 'DM Sans, var(--font-sans)',
+              wordBreak: 'break-word',
+              maxHeight: '120px',
+              overflowY: 'auto',
+            }}
+          >
+            {note.content}
+          </div>
+        )}
+
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)', fontSize: 14 }}>Loading audio...</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '36px 0', gap: 12, color: 'var(--text-secondary)', fontSize: 14 }}>
+            <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
+            <span>Loading audio...</span>
+          </div>
         ) : (
-          <>
-            <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 32, color: 'var(--text-primary)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '0 4px' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 32, fontWeight: 500, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
                 {formatTime(currentTime)}
               </span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 16, color: 'var(--text-secondary)', marginLeft: 8 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 16, color: 'var(--text-secondary)', marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>
                 / {formatTime(duration)}
               </span>
             </div>
 
-            <input
-              type="range"
-              min={0}
-              max={duration || 1}
-              step={0.01}
-              value={currentTime}
-              onPointerDown={handleSeekStart}
-              onMouseDown={handleSeekStart}
-              onTouchStart={handleSeekStart}
-              onChange={(e) => handleSeekChange(Number(e.target.value))}
-              onPointerUp={(e) => handleSeekEnd(Number((e.target as HTMLInputElement).value))}
-              onMouseUp={(e) => handleSeekEnd(Number((e.target as HTMLInputElement).value))}
-              onTouchEnd={(e) => handleSeekEnd(Number((e.target as HTMLInputElement).value))}
-              style={{
-                width: '100%',
-                height: 4,
-                appearance: 'none',
-                background: `linear-gradient(to right, var(--flame) ${sliderPercent}%, var(--border) ${sliderPercent}%)`,
-                borderRadius: 2,
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            />
+            <div style={{ position: 'relative', width: '100%', padding: '6px 0' }}>
+              <input
+                type="range"
+                min={0}
+                max={duration || 1}
+                step={0.01}
+                value={currentTime}
+                onPointerDown={handleSeekStart}
+                onMouseDown={handleSeekStart}
+                onTouchStart={handleSeekStart}
+                onChange={(e) => handleSeekChange(Number(e.target.value))}
+                onPointerUp={(e) => handleSeekEnd(Number((e.target as HTMLInputElement).value))}
+                onMouseUp={(e) => handleSeekEnd(Number((e.target as HTMLInputElement).value))}
+                onTouchEnd={(e) => handleSeekEnd(Number((e.target as HTMLInputElement).value))}
+                style={{
+                  width: '100%',
+                  height: 6,
+                  appearance: 'none',
+                  background: `linear-gradient(to right, var(--flame) ${sliderPercent}%, var(--border) ${sliderPercent}%)`,
+                  borderRadius: 3,
+                  outline: 'none',
+                  cursor: 'pointer',
+                  margin: 0,
+                }}
+              />
+            </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, marginTop: 24 }}>
-              <button onClick={skipBack} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: '50%', border: '1px solid var(--border)', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                <SkipBack size={18} />
-              </button>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, margin: '4px 0' }}>
               <button
-                onClick={togglePlay}
+                onClick={skipBack}
+                type="button"
+                title="Rewind 3 seconds"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: 56,
-                  height: 56,
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-card)',
+                  cursor: 'pointer',
+                  color: 'var(--text-primary)',
+                  transition: 'background-color 150ms ease, transform 100ms ease',
+                }}
+              >
+                <SkipBack size={18} />
+              </button>
+              <button
+                onClick={togglePlay}
+                type="button"
+                title={isPlaying ? 'Pause' : 'Play'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 60,
+                  height: 60,
                   borderRadius: '50%',
                   border: 'none',
                   background: 'var(--flame)',
                   cursor: 'pointer',
                   color: '#fff',
+                  boxShadow: '0 8px 24px rgba(249, 115, 22, 0.35)',
+                  transition: 'transform 100ms ease',
                 }}
               >
-                {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                {isPlaying ? <Pause size={26} /> : <Play size={26} style={{ marginLeft: 2 }} />}
               </button>
-              <button onClick={skipForward} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: '50%', border: '1px solid var(--border)', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+              <button
+                onClick={skipForward}
+                type="button"
+                title="Forward 3 seconds"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-card)',
+                  cursor: 'pointer',
+                  color: 'var(--text-primary)',
+                  transition: 'background-color 150ms ease, transform 100ms ease',
+                }}
+              >
                 <SkipForward size={18} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
               <button
                 onClick={() => downloadVoiceNoteAudio(note)}
+                type="button"
                 style={{
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
-                  padding: '8px 20px',
+                  gap: 8,
+                  padding: '10px 22px',
                   fontSize: 14,
+                  fontFamily: 'Inter, var(--font-sans)',
+                  fontWeight: 500,
                   color: 'var(--text-primary)',
                   border: '1px solid var(--border)',
                   borderRadius: 14,
-                  background: 'none',
+                  background: 'var(--bg-card)',
                   cursor: 'pointer',
+                  transition: 'background-color 150ms ease, border-color 150ms ease',
                 }}
               >
-                <Download size={16} /> Download
+                <Download size={16} /> Save to Downloads
               </button>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

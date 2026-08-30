@@ -243,8 +243,8 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                 <X size={20} />
               </button>
 
-              <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Mic size={16} color="var(--flame)" /> Voice Note
+              <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Voice Note
               </span>
 
               <button
