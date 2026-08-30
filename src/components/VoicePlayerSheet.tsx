@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { X, Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react';
-import { supabase, supabaseConfig } from '../lib/supabase';
+import { downloadVoiceNoteAudio, resolveVoiceUrl } from '../lib/audioDownload';
 import type { Note } from '../types/note';
 
 interface VoicePlayerSheetProps {
@@ -13,15 +13,6 @@ function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
-
-async function resolveUrl(url: string | null): Promise<string | null> {
-  if (!url) return null;
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url;
-  const { data } = await supabase.storage
-    .from(supabaseConfig.voiceBucket)
-    .createSignedUrl(url, 60 * 60 * 24 * 365);
-  return data?.signedUrl ?? null;
 }
 
 export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
@@ -78,7 +69,7 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const playableUrl = await resolveUrl(note.audioUrl);
+      const playableUrl = await resolveVoiceUrl(note.audioUrl);
       if (cancelled || !playableUrl) return;
 
       try {
@@ -293,15 +284,7 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
 
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
               <button
-                onClick={async () => {
-                  const playableUrl = await resolveUrl(note.audioUrl);
-                  if (playableUrl) {
-                    const a = document.createElement('a');
-                    a.href = playableUrl;
-                    a.download = `voice-note-${note.id}.webm`;
-                    a.click();
-                  }
-                }}
+                onClick={() => downloadVoiceNoteAudio(note)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

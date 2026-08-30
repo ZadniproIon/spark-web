@@ -69,7 +69,14 @@ export function NoteCard({ note }: { note: Note }) {
   const shouldRenderDot = showSyncDot && (!note.isSynced || !state.autoHideSyncDot || dotVisible);
 
   return <>
-    <article className={`note-card ${note.isPinned ? 'note-card--pinned' : ''}`} onContextMenu={handleContextMenu}>
+    <article
+      className={`note-card ${note.isPinned ? 'note-card--pinned' : ''}`}
+      onClick={() => {
+        if (note.type === 'voice') setShowPlayer(true);
+        else setShowEdit(true);
+      }}
+      onContextMenu={handleContextMenu}
+    >
       <p className="note-card__content">{note.type === 'voice' ? <><Mic size={16} aria-hidden="true" /> {note.content}</> : renderContentWithLinks(note.content)}</p>
       <footer className="note-card__meta">
         <time>{formatNoteDisplay(note)}</time>

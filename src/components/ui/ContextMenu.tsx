@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { Pin, PinOff, Edit3, Copy, Download, Play, Trash2, Link2 } from 'lucide-react';
 import { useNotes } from '../../hooks/useNotes';
+import { downloadVoiceNoteAudio } from '../../lib/audioDownload';
 import type { Note } from '../../types/note';
 
 interface ContextMenuProps {
@@ -72,15 +73,10 @@ export function ContextMenu({ note, onEdit, onPlay, onClose }: ContextMenuProps)
     onClose();
   }, [note.id, moveToTrash, onClose]);
 
-  const handleDownload = useCallback(() => {
-    if (note.audioUrl) {
-      const a = document.createElement('a');
-      a.href = note.audioUrl;
-      a.download = `voice-note-${note.id}.webm`;
-      a.click();
-    }
+  const handleDownload = useCallback(async () => {
     onClose();
-  }, [note.audioUrl, note.id, onClose]);
+    await downloadVoiceNoteAudio(note);
+  }, [note, onClose]);
 
   const urls = extractUrls(note.content);
 
@@ -97,10 +93,10 @@ export function ContextMenu({ note, onEdit, onPlay, onClose }: ContextMenuProps)
       }}
     >
       <MenuItem icon={note.isPinned ? <PinOff size={16} /> : <Pin size={16} />} label={note.isPinned ? 'Unpin' : 'Pin'} onClick={handlePin} />
-      {note.type === 'text' && onEdit && <MenuItem icon={<Edit3 size={16} />} label="Edit" onClick={() => { onEdit(); onClose(); }} />}
+      {onEdit && <MenuItem icon={<Edit3 size={16} />} label="Edit" onClick={() => { onEdit(); onClose(); }} />}
       {note.type === 'voice' && onPlay && <MenuItem icon={<Play size={16} />} label="Play" onClick={() => { onPlay(); onClose(); }} />}
       <MenuItem icon={<Copy size={16} />} label="Copy" onClick={handleCopy} />
-      {note.type === 'voice' && note.audioUrl && (
+      {note.type === 'voice' && (note.audioUrl || note.id) && (
         <MenuItem icon={<Download size={16} />} label="Save to Downloads" onClick={handleDownload} />
       )}
       {urls.length > 0 && (
