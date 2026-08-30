@@ -80,7 +80,7 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
     try {
       const { blob, duration: recDuration } = await stopRecording();
       if (blob && blob.size > 0) {
-        await addVoiceNote(blob, recDuration || duration);
+        await addVoiceNote(blob, recDuration || duration, content.trim() || undefined);
       }
       handleClose();
     } catch (err) {
@@ -88,7 +88,7 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
     } finally {
       setIsSavingVoice(false);
     }
-  }, [isSavingVoice, stopRecording, addVoiceNote, duration, handleClose]);
+  }, [isSavingVoice, stopRecording, addVoiceNote, duration, content, handleClose]);
 
 
   return (
@@ -221,7 +221,7 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
             </div>
           </>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px 4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <button
                 onClick={handleCancelVoice}
@@ -242,6 +242,10 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
               >
                 <X size={20} />
               </button>
+
+              <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Mic size={16} color="var(--flame)" /> Voice Note
+              </span>
 
               <button
                 onClick={handleVoiceConfirm}
@@ -266,7 +270,7 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
               </button>
             </div>
 
-            <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
+            <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
               <span
                 style={{
                   fontFamily: 'var(--font-mono)',
@@ -308,7 +312,7 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
               })}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
               <button
                 onClick={isPaused ? resumeRecording : pauseRecording}
                 disabled={!isRecording && duration === 0}
@@ -331,9 +335,36 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                 {isPaused ? <Play size={24} /> : <Pause size={24} />}
               </button>
 
-              <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                 {isPaused ? 'Paused' : 'Recording...'}
               </span>
+            </div>
+
+            <div style={{ width: '100%', marginTop: '4px' }}>
+              <input
+                type="text"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleVoiceConfirm();
+                  }
+                }}
+                placeholder={duration > 0 ? `Voice note (${Math.max(1, Math.round(duration))}s)` : 'Note title (optional)...'}
+                style={{
+                  width: '100%',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  padding: '10px 14px',
+                  fontSize: '14px',
+                  fontFamily: 'DM Sans, var(--font-sans)',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
             </div>
           </div>
         )}

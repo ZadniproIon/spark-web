@@ -262,68 +262,73 @@ export function useNotes() {
     }
   }, [state.user, dispatch]);
 
-  const addVoiceNote = useCallback(async (audioBlob: Blob, duration: number) => {
-    const now = new Date();
-    const isoNow = now.toISOString();
-    const noteId = crypto.randomUUID();
-    const ownerId = state.user?.id ?? 'guest';
-    const note: Note = {
-      id: noteId,
-      type: 'voice',
-      content: `Voice note (${Math.round(duration)}s)`,
-      audioPath: null,
-      audioUrl: URL.createObjectURL(audioBlob),
-      createdAt: isoNow,
-      updatedAt: isoNow,
-      ownerId,
-      isPinned: false,
-      isTrashed: false,
-      trashedAt: null,
-      isSynced: false,
-    };
-    saveOfflineAudio(noteId, audioBlob);
-    dispatch({ type: 'ADD_NOTE', payload: note });
-    toast.success('Voice note saved');
-
-    if (state.user) {
-      const isWav = audioBlob.type.includes('wav');
-      const isMp4 = audioBlob.type.includes('mp4') || audioBlob.type.includes('m4a') || audioBlob.type.includes('aac');
-      const ext = isWav ? 'wav' : isMp4 ? 'm4a' : 'webm';
-      const filePath = `${state.user.id}/${noteId}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from(supabaseConfig.voiceBucket)
-        .upload(filePath, audioBlob, { contentType: audioBlob.type || (isWav ? 'audio/wav' : isMp4 ? 'audio/mp4' : 'audio/webm'), upsert: true });
-      if (uploadError) {
-        console.error('Failed to upload voice audio:', uploadError);
-        return;
-      }
-      const { data: urlData } = await supabase.storage
-        .from(supabaseConfig.voiceBucket)
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365);
-      const audioUrl = urlData?.signedUrl ?? null;
-
-      const { error } = await supabase.from('notes').upsert({
+  const addVoiceNote = useCallback(
+    async (audioBlob: Blob, duration: number, customTitle?: string) => {
+      const now = new Date();
+      const isoNow = now.toISOString();
+      const noteId = crypto.randomUUID();
+      const ownerId = state.user?.id ?? 'guest';
+      const defaultTitle = `Voice note (${Math.max(1, Math.round(duration))}s)`;
+      const content = customTitle?.trim() ? customTitle.trim() : defaultTitle;
+      const note: Note = {
         id: noteId,
         type: 'voice',
-        content: `Voice note (${Math.round(duration)}s)`,
-        audio_url: audioUrl,
-        owner_id: note.ownerId,
-        created_at: isoNow,
-        updated_at: isoNow,
-        is_pinned: false,
-        is_trashed: false,
-      });
-      if (error) {
-        console.error('Failed to sync voice note:', error);
-      } else {
-        deleteOfflineAudio(noteId);
-        dispatch({
-          type: 'UPDATE_NOTE',
-          payload: { ...note, audioUrl, isSynced: true },
+        content,
+        audioPath: null,
+        audioUrl: URL.createObjectURL(audioBlob),
+        createdAt: isoNow,
+        updatedAt: isoNow,
+        ownerId,
+        isPinned: false,
+        isTrashed: false,
+        trashedAt: null,
+        isSynced: false,
+      };
+      saveOfflineAudio(noteId, audioBlob);
+      dispatch({ type: 'ADD_NOTE', payload: note });
+      toast.success('Voice note saved');
+
+      if (state.user) {
+        const isWav = audioBlob.type.includes('wav');
+        const isMp4 = audioBlob.type.includes('mp4') || audioBlob.type.includes('m4a') || audioBlob.type.includes('aac');
+        const ext = isWav ? 'wav' : isMp4 ? 'm4a' : 'webm';
+        const filePath = `${state.user.id}/${noteId}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from(supabaseConfig.voiceBucket)
+          .upload(filePath, audioBlob, { contentType: audioBlob.type || (isWav ? 'audio/wav' : isMp4 ? 'audio/mp4' : 'audio/webm'), upsert: true });
+        if (uploadError) {
+          console.error('Failed to upload voice audio:', uploadError);
+          return;
+        }
+        const { data: urlData } = await supabase.storage
+          .from(supabaseConfig.voiceBucket)
+          .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+        const audioUrl = urlData?.signedUrl ?? null;
+
+        const { error } = await supabase.from('notes').upsert({
+          id: noteId,
+          type: 'voice',
+          content,
+          audio_url: audioUrl,
+          owner_id: note.ownerId,
+          created_at: isoNow,
+          updated_at: isoNow,
+          is_pinned: false,
+          is_trashed: false,
         });
+        if (error) {
+          console.error('Failed to sync voice note:', error);
+        } else {
+          deleteOfflineAudio(noteId);
+          dispatch({
+            type: 'UPDATE_NOTE',
+            payload: { ...note, audioUrl, isSynced: true },
+          });
+        }
       }
-    }
-  }, [state.user, dispatch]);
+    },
+    [state.user, dispatch]
+  );
 
   const updateNote = useCallback(
     async (id: string, updates: Partial<Note>, touchUpdatedAt = true) => {
