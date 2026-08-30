@@ -34,7 +34,6 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
     isRecording,
     isPaused,
     duration,
-    amplitude,
     waveform,
     start: startRecording,
     stop: stopRecording,
