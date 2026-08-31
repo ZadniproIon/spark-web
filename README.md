@@ -18,34 +18,34 @@ Live App: [zadniproion-spark.netlify.app](https://zadniproion-spark.netlify.app/
 
 ## Screenshots
 
-### Masonry Grid Layout
+### Masonry grid layout
 ![Masonry Layout](screenshots/masonry_layout.png)
 
-### Single Column View
+### Single column view
 ![Single Column Layout](screenshots/1column_layout.png)
 
-### Floating Instant Search
+### Floating instant search
 ![Search Functionality](screenshots/search_functionality.png)
 
-### Voice Note Recording & Live Waveform
+### Voice note recording & live waveform
 ![Voice Note Recording](screenshots/recording_voice_note.png)
 
-### Voice Player Sheet
+### Voice player sheet
 ![Voice Note Playback](screenshots/playback_voice_note.png)
 
-### Recycle Bin & 30-Day Auto-Retention
+### Recycle bin & 30-day auto-retention
 ![Recycle Bin](screenshots/recycle_bin.png)
 
-### Settings & Themes
+### Settings
 ![Settings Modal](screenshots/settings_modal.png)
 
 ---
 
-## Platforms & Links
+## Platforms & links
 
-- Live Web App: [zadniproion-spark.netlify.app](https://zadniproion-spark.netlify.app/)
-- Web Repository: [Spark Web Repository](https://github.com/ZadniproIon/spark-web)
-- Android App (Flutter): [Spark Flutter Repository](https://github.com/ZadniproIon/spark) | [Download Spark v1.0 APK](https://github.com/ZadniproIon/spark/releases/tag/v1.0)
+- Live web app: [zadniproion-spark.netlify.app](https://zadniproion-spark.netlify.app/)
+- Web repository: [Spark Web Repository](https://github.com/ZadniproIon/spark-web)
+- Android app (Flutter): [Spark Flutter repository](https://github.com/ZadniproIon/spark) | [Download Spark v1.0 APK](https://github.com/ZadniproIon/spark/releases/tag/v1.0)
 
 ---
 
@@ -53,7 +53,7 @@ Live App: [zadniproion-spark.netlify.app](https://zadniproion-spark.netlify.app/
 
 - React 19 & TypeScript – UI architecture and state management
 - Vite – Build tool and development server
-- Supabase – Authentication, PostgreSQL database, and cloud storage
+- Supabase – authentication, PostgreSQL database, and cloud storage
 - Web Audio API – Voice note recording, real-time waveform visualization, and audio playback
 
 ---
@@ -87,19 +87,19 @@ Live App: [zadniproion-spark.netlify.app](https://zadniproion-spark.netlify.app/
 
 ## Project Setup
 
-### 1. Install Dependencies
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Run Development Server
+### 2. Run development server
 
 ```bash
 npm run dev
 ```
 
-### 3. Build for Production
+### 3. Build for production
 
 ```bash
 npm run build
