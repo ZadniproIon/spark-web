@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useStore } from '../lib/store';
 import { toast } from '../lib/toast';
 import { supabase, supabaseConfig } from '../lib/supabase';
+import { isFatalAuthError } from '../lib/authHelpers';
 import { saveOfflineAudio, getOfflineAudio, deleteOfflineAudio } from '../lib/offlineAudio';
 import type { Note } from '../types/note';
 
@@ -66,8 +67,8 @@ export function useNotes() {
       if (error) {
         console.error('[Spark] Sync fetch error:', error);
         if (error.code === 'PGRST301' || error.message?.includes('JWT') || error.message?.includes('unauthorized') || error.code === '401') {
-          const { data: { user: verifiedUser } } = await supabase.auth.getUser();
-          if (!verifiedUser) {
+          const { data: { user: verifiedUser }, error: userErr } = await supabase.auth.getUser();
+          if (!verifiedUser && isFatalAuthError(userErr)) {
             await supabase.auth.signOut().catch(() => {});
             dispatch({ type: 'SET_USER', payload: null });
             dispatch({ type: 'SET_NOTES', payload: [] });

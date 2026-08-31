@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { StoreProvider, useStore } from './lib/store';
 import { ToastProvider, toast } from './lib/toast';
 import { supabase } from './lib/supabase';
+import { isFatalAuthError } from './lib/authHelpers';
 import { Layout } from './components/Layout';
 
 function AuthListener() {
@@ -19,20 +20,33 @@ function AuthListener() {
         return;
       }
 
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) {
-        console.warn('[Spark] User no longer exists or session invalid. Signing out...');
-        await supabase.auth.signOut().catch(() => {});
-        prevUserRef.current = null;
-        dispatch({ type: 'SET_USER', payload: null });
-        dispatch({ type: 'SET_NOTES', payload: [] });
-        localStorage.removeItem('spark_notes');
-        return;
+      // Immediately set user from active local session
+      if (session.user) {
+        dispatch({ type: 'SET_USER', payload: session.user });
+        prevUserRef.current = session.user.id;
       }
 
-      dispatch({ type: 'SET_USER', payload: user });
-      if (user.id) {
-        prevUserRef.current = user.id;
+      // If online, check against auth server to catch deleted accounts
+      if (navigator.onLine) {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          if (isFatalAuthError(error)) {
+            console.warn('[Spark] User account no longer exists or session revoked. Signing out...');
+            await supabase.auth.signOut().catch(() => {});
+            prevUserRef.current = null;
+            dispatch({ type: 'SET_USER', payload: null });
+            dispatch({ type: 'SET_NOTES', payload: [] });
+            localStorage.removeItem('spark_notes');
+          } else {
+            console.warn('[Spark] Network drop during session check, maintaining local session:', error.message);
+          }
+          return;
+        }
+
+        if (user) {
+          dispatch({ type: 'SET_USER', payload: user });
+          prevUserRef.current = user.id;
+        }
       }
     };
 
@@ -58,20 +72,13 @@ function AuthListener() {
         return;
       }
 
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) {
-        await supabase.auth.signOut().catch(() => {});
-        prevUserRef.current = null;
-        dispatch({ type: 'SET_USER', payload: null });
-        dispatch({ type: 'SET_NOTES', payload: [] });
-        localStorage.removeItem('spark_notes');
-        return;
-      }
-
-      dispatch({ type: 'SET_USER', payload: user });
-      if (event === 'SIGNED_IN' && user?.email && prevUserRef.current !== user.id) {
-        toast.success(`Signed in as ${user.email}`);
-        prevUserRef.current = user.id;
+      const currentUser = session.user;
+      if (currentUser) {
+        dispatch({ type: 'SET_USER', payload: currentUser });
+        if (event === 'SIGNED_IN' && currentUser.email && prevUserRef.current !== currentUser.id) {
+          toast.success(`Signed in as ${currentUser.email}`);
+          prevUserRef.current = currentUser.id;
+        }
       }
     });
 

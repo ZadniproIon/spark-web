@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { supabase } from './lib/supabase';
+import { isFatalAuthError } from './lib/authHelpers';
 import './index.css';
 import App from './App';
 
@@ -35,13 +36,13 @@ async function initApp() {
     window.history.replaceState(null, '', window.location.pathname);
   } else {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
+    if (session && navigator.onLine) {
       const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) {
+      if (error && isFatalAuthError(error)) {
         console.warn('[Spark] Stale or deleted session found on startup, purging...');
         await supabase.auth.signOut().catch(() => {});
         localStorage.removeItem('spark_notes');
-      } else {
+      } else if (user) {
         console.log('[Spark] Verified active session:', user.email);
       }
     }
