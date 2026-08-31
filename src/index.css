@@ -314,7 +314,8 @@ a {
               border-color 160ms ease,
               background-color 160ms ease;
 }
-.note-card:hover {
+.note-card:hover,
+.note-card--context-open {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border-color: rgba(249, 115, 22, 0.3);
@@ -326,7 +327,8 @@ a {
 .note-card--pinned {
   border-color: var(--flame);
 }
-.note-card--pinned:hover {
+.note-card--pinned:hover,
+.note-card--pinned.note-card--context-open {
   border-color: var(--flame);
   box-shadow: 0 8px 24px rgba(249, 115, 22, 0.14);
 }

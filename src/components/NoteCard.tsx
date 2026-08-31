@@ -95,7 +95,7 @@ export function NoteCard({ note }: { note: Note }) {
 
   return <>
     <article
-      className={`note-card ${note.isPinned ? 'note-card--pinned' : ''}`}
+      className={`note-card ${note.isPinned ? 'note-card--pinned' : ''} ${showContext ? 'note-card--context-open' : ''}`.trim()}
       onClick={() => {
         if (note.type === 'voice') setShowPlayer(true);
         else setShowEdit(true);
