@@ -96,11 +96,11 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
         className="modal-content-animated"
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: '100%',
-          maxWidth: '550px',
+          width: 'min(100%, 550px)',
+          maxHeight: 'min(90dvh, 580px)',
           background: 'var(--bg)',
           borderRadius: '24px',
-          padding: '20px',
+          padding: 'clamp(16px, 4vw, 20px)',
           display: 'flex',
           flexDirection: 'column',
           gap: '16px',
@@ -360,7 +360,7 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-input)',
                   padding: '10px 14px',
-                  fontSize: '14px',
+                  fontSize: '16px',
                   fontFamily: 'var(--font-sans)',
                   color: 'var(--text-primary)',
                   outline: 'none',

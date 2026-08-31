@@ -208,11 +208,11 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
         className="modal-content-animated"
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: '100%',
-          maxWidth: '520px',
+          width: 'min(100%, 520px)',
+          maxHeight: 'min(90dvh, 580px)',
           background: 'var(--bg)',
           borderRadius: '24px',
-          padding: '24px',
+          padding: 'clamp(16px, 4vw, 24px)',
           display: 'flex',
           flexDirection: 'column',
           gap: '20px',

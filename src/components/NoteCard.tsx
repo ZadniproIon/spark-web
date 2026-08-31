@@ -60,9 +60,34 @@ export function NoteCard({ note }: { note: Note }) {
     }
   }, [note.isSynced, state.autoHideSyncDot]);
 
+  const touchTimerRef = useRef<number | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      touchTimerRef.current = window.setTimeout(() => {
+        setContextPos({
+          x: Math.max(12, Math.min(touch.clientX, window.innerWidth - 220)),
+          y: Math.max(12, Math.min(touch.clientY, window.innerHeight - 300)),
+        });
+        setShowContext(true);
+      }, 500);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  }, []);
+
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    setContextPos({ x: e.clientX, y: e.clientY });
+    setContextPos({
+      x: Math.max(12, Math.min(e.clientX, window.innerWidth - 220)),
+      y: Math.max(12, Math.min(e.clientY, window.innerHeight - 300)),
+    });
     setShowContext(true);
   }, []);
 
@@ -76,6 +101,9 @@ export function NoteCard({ note }: { note: Note }) {
         else setShowEdit(true);
       }}
       onContextMenu={handleContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchEnd}
     >
       <p className="note-card__content">{note.type === 'voice' ? <><Mic size={16} aria-hidden="true" /> {note.content}</> : renderContentWithLinks(note.content)}</p>
       <footer className="note-card__meta">
@@ -99,7 +127,21 @@ export function NoteCard({ note }: { note: Note }) {
         </div>
       </footer>
     </article>
-    {showContext && <div className="note-card__context-layer" onClick={() => setShowContext(false)}><div style={{ position: 'absolute', top: contextPos.y, left: contextPos.x }} onClick={(e) => e.stopPropagation()}><ContextMenu note={note} onEdit={() => setShowEdit(true)} onPlay={() => setShowPlayer(true)} onClose={() => setShowContext(false)} /></div></div>}
+    {showContext && (
+      <div className="note-card__context-layer" onClick={() => setShowContext(false)}>
+        <div
+          style={{
+            position: 'absolute',
+            top: contextPos.y,
+            left: contextPos.x,
+            maxWidth: 'calc(100vw - 24px)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ContextMenu note={note} onEdit={() => setShowEdit(true)} onPlay={() => setShowPlayer(true)} onClose={() => setShowContext(false)} />
+        </div>
+      </div>
+    )}
     {showEdit && <EditNoteModal note={note} onClose={() => setShowEdit(false)} />}
     {showPlayer && note.type === 'voice' && <VoicePlayerSheet note={note} onClose={() => setShowPlayer(false)} />}
   </>;

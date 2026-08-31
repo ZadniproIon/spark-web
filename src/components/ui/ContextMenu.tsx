@@ -35,7 +35,7 @@ function MenuItem({
         alignItems: 'center',
         gap: 12,
         width: '100%',
-        padding: '10px 16px',
+        padding: '11px 16px',
         fontSize: 14,
         fontFamily: 'var(--font-sans)',
         fontWeight: 500,

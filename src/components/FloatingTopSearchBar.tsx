@@ -61,7 +61,7 @@ export function FloatingTopSearchBar({ onClose, resultCount }: FloatingTopSearch
             background: 'transparent',
             border: 'none',
             outline: 'none',
-            fontSize: 14,
+            fontSize: 16,
             color: 'var(--text-primary)',
             fontFamily: 'var(--font-sans)',
           }}
@@ -69,6 +69,7 @@ export function FloatingTopSearchBar({ onClose, resultCount }: FloatingTopSearch
 
         {state.searchQuery && resultCount !== undefined && (
           <span
+            className="floating-search-count"
             style={{
               fontSize: 11,
               fontFamily: 'var(--font-mono)',

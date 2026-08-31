@@ -58,7 +58,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
         style={{
           background: 'var(--bg-card)',
           borderRadius: '24px',
-          padding: '32px',
+          padding: 'clamp(20px, 5vw, 32px)',
           width: 'min(100%, 460px)',
           boxShadow: '0 16px 48px rgba(0, 0, 0, 0.15)',
         }}
@@ -96,7 +96,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
                   style={{
                     width: '100%',
                     padding: '12px 14px 12px 40px',
-                    fontSize: 14,
+                    fontSize: 16,
                     fontFamily: 'var(--font-sans)',
                     color: 'var(--text-primary)',
                     background: 'var(--bg)',
@@ -117,7 +117,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
                     style={{
                       width: '100%',
                       padding: '12px 40px 12px 40px',
-                      fontSize: 14,
+                      fontSize: 16,
                       fontFamily: 'var(--font-sans)',
                       color: 'var(--text-primary)',
                       background: 'var(--bg)',

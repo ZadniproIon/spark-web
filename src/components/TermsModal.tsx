@@ -16,10 +16,9 @@ export function TermsModal({ onClose }: TermsModalProps) {
         style={{
           background: 'var(--bg)',
           borderRadius: '24px',
-          padding: '28px',
-          width: '100%',
-          maxWidth: '620px',
-          maxHeight: '85vh',
+          padding: 'clamp(16px, 4vw, 24px)',
+          width: 'min(100%, 620px)',
+          maxHeight: 'min(90dvh, 640px)',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)',

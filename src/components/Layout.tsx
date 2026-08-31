@@ -18,7 +18,7 @@ import type { Note } from '../types/note';
 type ModalName = 'addNote' | 'voiceRecorder' | 'auth' | 'settings' | 'recycleBin' | 'editNote';
 
 function useMasonryColumnCount(): number {
-  const [winWidth, setWinWidth] = useState(() => window.innerWidth);
+  const [winWidth, setWinWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200));
 
   useEffect(() => {
     const onResize = () => setWinWidth(window.innerWidth);
@@ -26,8 +26,8 @@ function useMasonryColumnCount(): number {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  if (winWidth <= 760) return 1;
-  if (winWidth <= 1150) return 2;
+  if (winWidth < 680) return 1;
+  if (winWidth <= 1100) return 2;
   return 3;
 }
 
@@ -39,7 +39,7 @@ function distributeNotes(notes: Note[], cols: number): Note[][] {
 
 export function Layout() {
   const { state, dispatch } = useStore();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const [showSearch, setShowSearch] = useState(() => Boolean(state.searchQuery));
   
   useTheme(); // Ensure global theme and system dark/light change listener are always active
@@ -53,6 +53,9 @@ export function Layout() {
 
   const openModal = useCallback((modal: ModalName, data?: unknown) => {
     dispatch({ type: 'OPEN_MODAL', payload: { modal, data } });
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   }, [dispatch]);
 
   const closeModal = useCallback(() => dispatch({ type: 'CLOSE_MODAL' }), [dispatch]);
@@ -65,6 +68,9 @@ export function Layout() {
       }
       return next;
     });
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   }, [state.searchQuery, dispatch]);
 
   const handleCloseSearch = useCallback(() => {
@@ -82,6 +88,14 @@ export function Layout() {
 
   return (
     <div className={`app-shell ${sidebarOpen ? '' : 'app-shell--sidebar-closed'}`}>
+      {sidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <aside className="sidebar" aria-label="Primary navigation">
         <div className="sidebar__top">
           <div className="brand">
@@ -151,6 +165,14 @@ export function Layout() {
             ))}
           </div>
         )}
+
+        <button
+          className="mobile-fab"
+          onClick={() => openModal('addNote')}
+          aria-label="Create note"
+        >
+          <Plus size={24} />
+        </button>
       </main>
 
       {state.modal === 'addNote' && <AddNoteModal onClose={closeModal} />}

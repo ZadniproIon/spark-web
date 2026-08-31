@@ -37,11 +37,11 @@ export function EditNoteModal({ note, onClose }: EditNoteModalProps) {
         className="modal-content-animated"
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: '100%',
-          maxWidth: '550px',
+          width: 'min(100%, 550px)',
+          maxHeight: 'min(90dvh, 580px)',
           background: 'var(--bg)',
           borderRadius: '24px',
-          padding: '20px',
+          padding: 'clamp(16px, 4vw, 20px)',
           display: 'flex',
           flexDirection: 'column',
           gap: '16px',
