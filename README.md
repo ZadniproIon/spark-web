@@ -1,75 +1,109 @@
-# React + TypeScript + Vite
+![Spark Banner](banner.png)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Spark Web
 
-Currently, two official plugins are available:
+A quick-thought web app for capturing sudden ideas the moment they strike.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+When you have a sudden idea (a spark), note it down instantly, then revisit and organize it whenever you're ready. Built with a focus on speed, fluid interactions, keyboard accessibility, and offline-first reliability.
 
-## React Compiler
+Current app version: 1.0.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Live App: [zadniproion-spark.netlify.app](https://zadniproion-spark.netlify.app/)
 
-## Expanding the ESLint configuration
+> Looking for the mobile version? Check out [Spark (Flutter)](https://github.com/ZadniproIon/spark) and [Download the Android APK](https://github.com/ZadniproIon/spark/releases/tag/v1.0).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+> Note: Spark Web is under active development. While all core features (note-taking, audio recording, search, and cloud sync) are fully operational, subtle animation transitions and minor edge cases are continuously being polished.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Screenshots
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Masonry Grid Layout
+![Masonry Layout](screenshots/masonry_layout.png)
 
+### Single Column View
+![Single Column Layout](screenshots/1column_layout.png)
+
+### Floating Instant Search
+![Search Functionality](screenshots/search_functionality.png)
+
+### Voice Note Recording & Live Waveform
+![Voice Note Recording](screenshots/recording_voice_note.png)
+
+### Voice Player Sheet
+![Voice Note Playback](screenshots/playback_voice_note.png)
+
+### Recycle Bin & 30-Day Auto-Retention
+![Recycle Bin](screenshots/recycle_bin.png)
+
+### Settings & Themes
+![Settings Modal](screenshots/settings_modal.png)
+
+---
+
+## Platforms & Links
+
+- Live Web App: [zadniproion-spark.netlify.app](https://zadniproion-spark.netlify.app/)
+- Web Repository: [Spark Web Repository](https://github.com/ZadniproIon/spark-web)
+- Android App (Flutter): [Spark Flutter Repository](https://github.com/ZadniproIon/spark) | [Download Spark v1.0 APK](https://github.com/ZadniproIon/spark/releases/tag/v1.0)
+
+---
+
+## Tech Stack
+
+- React 19 & TypeScript – UI architecture and state management
+- Vite – Build tool and development server
+- Supabase – Authentication, PostgreSQL database, and cloud storage
+- Web Audio API – Voice note recording, real-time waveform visualization, and audio playback
+
+---
+
+## Features
+
+- Quick note creation with keyboard shortcuts and distraction-free modals
+- Voice notes with live audio waveform meters, pause/resume, and custom titling
+- Audio player sheet with interactive scrubber and duration tracking
+- Multi-column masonry and single-column layout options
+- Instant search overlay with live filtering (`/` or `Ctrl + K`)
+- Right-click context menu for pinning, editing, copying, downloading audio, and deleting
+- Recycle bin with instant restore and 30-day automatic retention
+- Automatic URL detection with direct clickable links
+- Local guest mode and real-time cloud sync with Supabase
+- Mobile responsive layout with slide-over drawer and touch controls
+- Dark, light, and system themes
+
+---
+
+## Keyboard Shortcuts
+
+| Action | Shortcut |
+|---|---|
+| New Note | <kbd>N</kbd> |
+| Search Notes | <kbd>/</kbd> or <kbd>Ctrl</kbd> + <kbd>K</kbd> |
+| Save Note | <kbd>Ctrl</kbd> + <kbd>Enter</kbd> |
+| Close Modal / Dismiss | <kbd>Esc</kbd> |
+
+---
+
+## Project Setup
+
+### 1. Install Dependencies
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Run Development Server
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run dev
 ```
+
+### 3. Build for Production
+
+```bash
+npm run build
+npm run preview
+```
+
+
