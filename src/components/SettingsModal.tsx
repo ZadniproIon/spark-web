@@ -20,6 +20,8 @@ import {
   ChevronRight,
   KeyRound,
   Unlink,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
@@ -260,6 +262,8 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                 <button
                   key={tab.id}
                   type="button"
+                  aria-label={tab.label}
+                  title={tab.label}
                   onClick={() => {
                     setActiveTab(tab.id);
                     setAccountSubView('main');
@@ -285,7 +289,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                   }}
                 >
                   <Icon size={16} />
-                  <span>{tab.label}</span>
+                  <span className="settings-tab-label">{tab.label}</span>
                 </button>
               );
             })}
@@ -323,6 +327,8 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       <button
                         key={item.id}
                         type="button"
+                        aria-label={`${item.label} theme`}
+                        title={`${item.label} theme`}
                         onClick={() => setTheme(item.id)}
                         style={{
                           display: 'flex',
@@ -342,7 +348,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                         }}
                       >
                         <Icon size={15} />
-                        <span>{item.label}</span>
+                        <span className="settings-theme-label">{item.label}</span>
                       </button>
                     );
                   })}
@@ -873,7 +879,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button
                   type="button"
-                  onClick={handleCopyEmail}
+                  onClick={() => window.open('mailto:zadnipro.ion.187@gmail.com?subject=Spark%20Feedback')}
                   style={{
                     padding: '12px 14px',
                     borderRadius: 'var(--radius-button)',
@@ -894,7 +900,42 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     <MessageCircle size={16} color="var(--text-secondary)" />
                     <span>Send feedback</span>
                   </div>
-                  <span style={{ fontSize: 12, color: 'var(--flame)' }}>{copiedEmail ? 'Copied email!' : 'zadnipro.ion.187@gmail.com'}</span>
+                  <ChevronRight size={15} color="var(--text-secondary)" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 'var(--radius-button)',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    fontFamily: 'var(--font-sans)',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {copiedEmail ? <Check size={16} color="var(--green)" /> : <Copy size={16} color="var(--text-secondary)" />}
+                    <span>Copy email address</span>
+                  </div>
+                  <span
+                    className="settings-copy-email-address"
+                    style={{
+                      fontSize: 12,
+                      color: copiedEmail ? 'var(--green)' : 'var(--flame)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    {copiedEmail ? 'Copied!' : 'zadnipro.ion.187@gmail.com'}
+                  </span>
                 </button>
 
                 <button

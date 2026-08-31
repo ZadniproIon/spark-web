@@ -952,3 +952,17 @@ a {
     border-radius: 20px;
   }
 }
+
+@media (max-width: 500px) {
+  .settings-tab-label {
+    display: none !important;
+  }
+
+  .settings-theme-label {
+    display: none !important;
+  }
+
+  .settings-copy-email-address {
+    display: none !important;
+  }
+}
