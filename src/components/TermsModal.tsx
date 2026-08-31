@@ -29,12 +29,12 @@ export function TermsModal({ onClose }: TermsModalProps) {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(249, 115, 22, 0.12)', color: 'var(--flame)', display: 'grid', placeItems: 'center' }}>
+            <div style={{ width: 38, height: 38, borderRadius: 'var(--radius-button)', background: 'var(--flame-subtle)', color: 'var(--flame)', display: 'grid', placeItems: 'center' }}>
               <ShieldCheck size={22} />
             </div>
             <div>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Terms of Service & Privacy</h2>
-              <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: '2px 0 0', fontFamily: 'var(--font-mono)' }}>Last updated: August 2026 • Spark v1.0.0</p>
+              <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: '2px 0 0', fontFamily: 'var(--font-mono)' }}>Last updated: August 2026 • Spark v1.0</p>
             </div>
           </div>
 
@@ -51,6 +51,7 @@ export function TermsModal({ onClose }: TermsModalProps) {
               placeItems: 'center',
               color: 'var(--text-secondary)',
               cursor: 'pointer',
+              transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             <X size={16} />
@@ -168,14 +169,16 @@ export function TermsModal({ onClose }: TermsModalProps) {
             type="button"
             onClick={handleClose}
             style={{
-              padding: '9px 20px',
-              borderRadius: 10,
+              padding: '10px 18px',
+              borderRadius: 'var(--radius-button)',
               background: 'var(--flame)',
-              border: 'none',
-              color: '#fff',
-              fontSize: 13,
+              border: '1px solid var(--flame)',
+              color: '#ffffff',
+              fontSize: '14px',
+              fontFamily: 'var(--font-sans)',
               fontWeight: 600,
               cursor: 'pointer',
+              transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             I Understand

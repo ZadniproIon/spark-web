@@ -44,7 +44,7 @@ export function SparkIconButton({
         ...styles.button,
         width: dimension,
         height: dimension,
-        borderRadius: isCircular ? '50%' : '14px',
+        borderRadius: isCircular ? '50%' : 'var(--radius-button)',
         backgroundColor: disabled ? 'transparent' : (backgroundColor ?? 'transparent'),
         borderColor: borderColor ?? 'transparent',
         opacity: disabled ? 0.5 : 1,

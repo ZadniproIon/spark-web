@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNotes } from '../hooks/useNotes';
 import { useModalAnimation } from '../hooks/useModalAnimation';
 import { toast } from '../lib/toast';
@@ -11,8 +11,17 @@ interface EditNoteModalProps {
 
 export function EditNoteModal({ note, onClose }: EditNoteModalProps) {
   const [content, setContent] = useState(note.content);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { updateNote } = useNotes();
   const { isClosing, handleClose } = useModalAnimation(onClose);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      const len = textareaRef.current.value.length;
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(len, len);
+    }
+  }, []);
 
   const handleSave = useCallback(() => {
     if (content.trim() && content.trim() !== note.content) {
@@ -46,8 +55,13 @@ export function EditNoteModal({ note, onClose }: EditNoteModalProps) {
           </div>
         )}
         <textarea
+          ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          onFocus={(e) => {
+            const len = e.currentTarget.value.length;
+            e.currentTarget.setSelectionRange(len, len);
+          }}
           onKeyDown={(e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
               e.preventDefault();
@@ -55,7 +69,6 @@ export function EditNoteModal({ note, onClose }: EditNoteModalProps) {
             }
           }}
           placeholder="Type here..."
-          autoFocus
           rows={8}
           style={{
             width: '100%',
@@ -82,7 +95,7 @@ export function EditNoteModal({ note, onClose }: EditNoteModalProps) {
             display: 'flex',
             justifyContent: 'flex-end',
             alignItems: 'center',
-            gap: '16px',
+            gap: '10px',
             width: '100%',
           }}
         >
@@ -92,17 +105,17 @@ export function EditNoteModal({ note, onClose }: EditNoteModalProps) {
             style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '12px 16px',
-              fontSize: '16px',
-              fontFamily: 'Inter, var(--font-sans)',
-              fontWeight: 400,
+              borderRadius: 'var(--radius-button)',
+              padding: '10px 16px',
+              fontSize: '14px',
+              fontFamily: 'var(--font-sans)',
+              fontWeight: 500,
               color: 'var(--text-primary)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'background-color 150ms ease, border-color 150ms ease',
+              transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             Cancel
@@ -112,20 +125,20 @@ export function EditNoteModal({ note, onClose }: EditNoteModalProps) {
             disabled={!content.trim()}
             type="button"
             style={{
-              background: 'var(--bg-card)',
+              background: 'var(--flame)',
               border: '1px solid var(--flame)',
-              borderRadius: '12px',
-              padding: '12px 16px',
-              fontSize: '16px',
-              fontFamily: 'Inter, var(--font-sans)',
-              fontWeight: 400,
-              color: 'var(--flame)',
+              borderRadius: 'var(--radius-button)',
+              padding: '10px 18px',
+              fontSize: '14px',
+              fontFamily: 'var(--font-sans)',
+              fontWeight: 600,
+              color: '#ffffff',
               cursor: content.trim() ? 'pointer' : 'not-allowed',
               opacity: content.trim() ? 1 : 0.5,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'opacity 150ms ease',
+              transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
             Save

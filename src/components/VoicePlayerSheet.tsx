@@ -230,8 +230,8 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
             type="button"
             title="Close"
             style={{
-              width: 36,
-              height: 36,
+              width: 32,
+              height: 32,
               borderRadius: '50%',
               border: '1px solid var(--border)',
               background: 'var(--bg-card)',
@@ -240,10 +240,10 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              transition: 'background-color 150ms ease, color 150ms ease',
+              transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
@@ -252,12 +252,12 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
             style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--border)',
-              borderRadius: '14px',
+              borderRadius: 'var(--radius-card)',
               padding: '14px 16px',
               fontSize: '15px',
               lineHeight: 1.5,
               color: 'var(--text-primary)',
-              fontFamily: 'DM Sans, var(--font-sans)',
+              fontFamily: 'var(--font-sans)',
               wordBreak: 'break-word',
               maxHeight: '120px',
               overflowY: 'auto',
@@ -310,7 +310,7 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
               />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, margin: '4px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, margin: '4px 0' }}>
               <button
                 onClick={skipBack}
                 type="button"
@@ -326,7 +326,8 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
                   background: 'var(--bg-card)',
                   cursor: 'pointer',
                   color: 'var(--text-primary)',
-                  transition: 'background-color 150ms ease, transform 100ms ease',
+                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: 'var(--shadow-1)',
                 }}
               >
                 <SkipBack size={18} />
@@ -339,15 +340,15 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: 60,
-                  height: 60,
+                  width: 58,
+                  height: 58,
                   borderRadius: '50%',
-                  border: 'none',
+                  border: '1px solid var(--flame)',
                   background: 'var(--flame)',
                   cursor: 'pointer',
-                  color: '#fff',
-                  boxShadow: '0 8px 24px rgba(249, 115, 22, 0.35)',
-                  transition: 'transform 100ms ease',
+                  color: '#ffffff',
+                  boxShadow: '0 8px 24px var(--flame-subtle)',
+                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
               >
                 {isPlaying ? <Pause size={26} /> : <Play size={26} style={{ marginLeft: 2 }} />}
@@ -367,7 +368,8 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
                   background: 'var(--bg-card)',
                   cursor: 'pointer',
                   color: 'var(--text-primary)',
-                  transition: 'background-color 150ms ease, transform 100ms ease',
+                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: 'var(--shadow-1)',
                 }}
               >
                 <SkipForward size={18} />
@@ -382,16 +384,16 @@ export function VoicePlayerSheet({ note, onClose }: VoicePlayerSheetProps) {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 8,
-                  padding: '10px 22px',
+                  padding: '10px 18px',
                   fontSize: 14,
-                  fontFamily: 'Inter, var(--font-sans)',
+                  fontFamily: 'var(--font-sans)',
                   fontWeight: 500,
                   color: 'var(--text-primary)',
                   border: '1px solid var(--border)',
-                  borderRadius: 14,
+                  borderRadius: 'var(--radius-button)',
                   background: 'var(--bg-card)',
                   cursor: 'pointer',
-                  transition: 'background-color 150ms ease, border-color 150ms ease',
+                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
               >
                 <Download size={16} /> Save to Downloads

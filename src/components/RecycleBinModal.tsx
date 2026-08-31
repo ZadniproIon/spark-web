@@ -39,9 +39,8 @@ export function RecycleBinModal({ onClose }: RecycleBinModalProps) {
           background: 'var(--bg)',
           borderRadius: '24px',
           padding: '24px',
-          width: '100%',
-          maxWidth: '520px',
-          maxHeight: '85vh',
+          width: 'min(100%, 600px)',
+          height: 'min(680px, 88vh)',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)',
@@ -82,17 +81,18 @@ export function RecycleBinModal({ onClose }: RecycleBinModalProps) {
                 }}
                 style={{
                   padding: '6px 12px',
-                  borderRadius: 8,
-                  background: showEmptyConfirm ? 'rgba(225, 29, 72, 0.12)' : 'var(--bg-card)',
-                  border: `1px solid ${showEmptyConfirm ? 'rgba(225, 29, 72, 0.3)' : 'var(--border)'}`,
+                  borderRadius: 'var(--radius-button)',
+                  background: showEmptyConfirm ? 'var(--red-subtle)' : 'var(--bg-card)',
+                  border: `1px solid ${showEmptyConfirm ? 'var(--red-border)' : 'var(--border)'}`,
                   color: showEmptyConfirm ? 'var(--red)' : 'var(--text-secondary)',
                   fontSize: 12,
+                  fontFamily: 'var(--font-sans)',
                   fontWeight: 500,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  transition: 'all 150ms ease',
+                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
               >
                 <Trash2 size={13} />
@@ -113,6 +113,7 @@ export function RecycleBinModal({ onClose }: RecycleBinModalProps) {
                 placeItems: 'center',
                 color: 'var(--text-secondary)',
                 cursor: 'pointer',
+                transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
               <X size={16} />
@@ -121,11 +122,11 @@ export function RecycleBinModal({ onClose }: RecycleBinModalProps) {
         </div>
 
         {/* Scrollable Trashed Notes Stream */}
-        <div style={{ overflowY: 'auto', flex: 1, paddingRight: 4 }}>
+        <div style={{ overflowY: 'auto', flex: 1, paddingRight: 4, display: 'flex', flexDirection: 'column' }}>
           {trashedNotes.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '50px 16px', color: 'var(--text-secondary)' }}>
-              <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-secondary)' }}>Recycle bin is empty</p>
-              <p style={{ fontSize: 12, marginTop: 4, opacity: 0.8 }}>Notes in the recycle bin are permanently deleted after 30 days</p>
+            <div style={{ textAlign: 'center', margin: 'auto', padding: '32px 16px', color: 'var(--text-secondary)' }}>
+              <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-secondary)', margin: 0 }}>Recycle bin is empty</p>
+              <p style={{ fontSize: 12, marginTop: 6, opacity: 0.8, margin: 0 }}>Notes in the recycle bin are permanently deleted after 30 days</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -165,7 +166,7 @@ export function RecycleBinModal({ onClose }: RecycleBinModalProps) {
                         <span style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
                           {note.trashedAt ? format(new Date(note.trashedAt), 'MMM d, yyyy • HH:mm') : ''}
                         </span>
-                        <span style={{ color: 'var(--flame)', fontWeight: 600 }}>
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
                           {daysLeft === 1 ? '1 day left' : `${daysLeft} days left`}
                         </span>
                       </div>
@@ -178,19 +179,28 @@ export function RecycleBinModal({ onClose }: RecycleBinModalProps) {
                         onClick={() => restoreNote(note.id)}
                         style={{
                           flex: 1,
-                          padding: '10px',
+                          padding: '10px 14px',
                           background: 'var(--bg-card)',
                           border: '1px solid var(--border)',
                           borderRadius: '4px 4px 4px 16px',
                           color: 'var(--text-primary)',
                           fontSize: 13,
+                          fontFamily: 'var(--font-sans)',
                           fontWeight: 500,
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: 6,
-                          transition: 'all 150ms ease',
+                          transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--bg)';
+                          e.currentTarget.style.borderColor = 'var(--flame-border)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'var(--bg-card)';
+                          e.currentTarget.style.borderColor = 'var(--border)';
                         }}
                       >
                         <RotateCcw size={14} />
@@ -202,19 +212,28 @@ export function RecycleBinModal({ onClose }: RecycleBinModalProps) {
                         onClick={() => deleteForever(note.id)}
                         style={{
                           flex: 1,
-                          padding: '10px',
+                          padding: '10px 14px',
                           background: 'var(--bg-card)',
                           border: '1px solid var(--border)',
                           borderRadius: '4px 4px 16px 4px',
                           color: 'var(--red)',
                           fontSize: 13,
+                          fontFamily: 'var(--font-sans)',
                           fontWeight: 500,
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: 6,
-                          transition: 'all 150ms ease',
+                          transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--red-subtle)';
+                          e.currentTarget.style.borderColor = 'var(--red-border)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'var(--bg-card)';
+                          e.currentTarget.style.borderColor = 'var(--border)';
                         }}
                       >
                         <Trash2 size={14} />

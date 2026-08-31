@@ -89,7 +89,7 @@ export function NoteCard({ note }: { note: Note }) {
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                backgroundColor: note.isSynced ? '#10B981' : 'var(--flame)',
+                backgroundColor: note.isSynced ? 'var(--green)' : 'var(--flame)',
                 transition: 'opacity 300ms ease',
                 opacity: dotVisible ? 1 : 0,
               }}

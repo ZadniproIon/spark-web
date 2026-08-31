@@ -37,12 +37,14 @@ function MenuItem({
         width: '100%',
         padding: '10px 16px',
         fontSize: 14,
+        fontFamily: 'var(--font-sans)',
+        fontWeight: 500,
         color: destructive ? 'var(--red)' : 'var(--text-primary)',
         background: 'none',
         border: 'none',
         cursor: 'pointer',
         transition: 'background 140ms ease-out',
-        borderRadius: 8,
+        borderRadius: 'var(--radius-button)',
       }}
       onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--border)')}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}

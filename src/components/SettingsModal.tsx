@@ -223,12 +223,13 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                 width: 32,
                 height: 32,
                 borderRadius: '50%',
-                background: 'var(--bg)',
+                background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
                 display: 'grid',
                 placeItems: 'center',
                 color: 'var(--text-secondary)',
                 cursor: 'pointer',
+                transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
               <X size={16} />
@@ -271,15 +272,16 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     justifyContent: 'center',
                     gap: '8px',
                     padding: '8px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'calc(12px - 4px)',
                     border: 'none',
                     background: isActive ? 'var(--bg-card)' : 'transparent',
                     color: isActive ? 'var(--flame)' : 'var(--text-secondary)',
                     fontWeight: isActive ? 600 : 500,
                     fontSize: '13px',
+                    fontFamily: 'var(--font-sans)',
                     cursor: 'pointer',
                     boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                    transition: 'all 150ms ease',
+                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   <Icon size={16} />
@@ -305,7 +307,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
               }}
             >
               {/* Theme Section */}
-              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 14 }}>
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: 14 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>Theme</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   {(
@@ -328,14 +330,15 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                           justifyContent: 'center',
                           gap: 6,
                           padding: '10px 8px',
-                          borderRadius: 10,
+                          borderRadius: 'var(--radius-button)',
                           border: `1px solid ${isSelected ? 'var(--flame)' : 'var(--border)'}`,
-                          background: isSelected ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-card)',
+                          background: isSelected ? 'var(--flame-subtle)' : 'var(--bg-card)',
                           color: isSelected ? 'var(--flame)' : 'var(--text-secondary)',
                           fontSize: 13,
+                          fontFamily: 'var(--font-sans)',
                           fontWeight: isSelected ? 600 : 400,
                           cursor: 'pointer',
-                          transition: 'all 150ms ease',
+                          transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                         }}
                       >
                         <Icon size={15} />
@@ -347,7 +350,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
               </div>
 
               {/* Layout Mode */}
-              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 14 }}>
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: 14 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>Layout Mode</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                   {(
@@ -369,14 +372,15 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                           justifyContent: 'center',
                           gap: 6,
                           padding: '10px 8px',
-                          borderRadius: 10,
+                          borderRadius: 'var(--radius-button)',
                           border: `1px solid ${isSelected ? 'var(--flame)' : 'var(--border)'}`,
-                          background: isSelected ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-card)',
+                          background: isSelected ? 'var(--flame-subtle)' : 'var(--bg-card)',
                           color: isSelected ? 'var(--flame)' : 'var(--text-secondary)',
                           fontSize: 13,
+                          fontFamily: 'var(--font-sans)',
                           fontWeight: isSelected ? 600 : 400,
                           cursor: 'pointer',
-                          transition: 'all 150ms ease',
+                          transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                         }}
                       >
                         <Icon size={15} />
@@ -388,10 +392,10 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
               </div>
 
               {/* Auto-Hide Green Sync Dot */}
-              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 14px' }}>
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: '12px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)' }} />
                     <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>Auto-hide green dot</span>
                   </div>
                   <ToggleSwitch
@@ -416,8 +420,8 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
               }}
             >
               {/* Profile Card */}
-              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(249, 115, 22, 0.1)', display: 'grid', placeItems: 'center', color: 'var(--flame)' }}>
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 'var(--radius-button)', background: 'var(--flame-subtle)', display: 'grid', placeItems: 'center', color: 'var(--flame)' }}>
                   <User size={20} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -435,18 +439,20 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                   type="button"
                   onClick={onOpenAuth}
                   style={{
-                    padding: '12px',
-                    borderRadius: 12,
+                    padding: '12px 16px',
+                    borderRadius: 'var(--radius-button)',
                     background: 'var(--flame)',
-                    color: '#fff',
+                    color: '#ffffff',
                     fontSize: 14,
+                    fontFamily: 'var(--font-sans)',
                     fontWeight: 600,
-                    border: 'none',
+                    border: '1px solid var(--flame)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
                     cursor: 'pointer',
+                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   <Mail size={16} />
@@ -454,7 +460,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                 </button>
               ) : accountSubView === 'change_email' ? (
                 /* Subview: Change Email */
-                <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
                     <Mail size={16} color="var(--flame)" />
                     <span>Change email address</span>
@@ -466,12 +472,13 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     onChange={(e) => setNewEmail(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '10px 12px',
+                      padding: '10px 14px',
                       background: 'var(--bg-card)',
                       border: '1px solid var(--border)',
-                      borderRadius: 10,
+                      borderRadius: 'var(--radius-input)',
                       color: 'var(--text-primary)',
-                      fontSize: 13,
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 14,
                     }}
                   />
                   {accountError && <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{accountError}</p>}
@@ -481,13 +488,16 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       onClick={() => { setAccountSubView('main'); setAccountError(null); }}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: 8,
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-button)',
                         background: 'var(--bg-card)',
                         border: '1px solid var(--border)',
                         color: 'var(--text-secondary)',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: 13,
+                        fontWeight: 500,
                         cursor: 'pointer',
+                        transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       Cancel
@@ -498,14 +508,16 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       onClick={handleChangeEmail}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: 8,
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-button)',
                         background: 'var(--flame)',
-                        border: 'none',
-                        color: '#fff',
+                        border: '1px solid var(--flame)',
+                        color: '#ffffff',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: 13,
                         fontWeight: 600,
                         cursor: accountActionLoading ? 'not-allowed' : 'pointer',
+                        transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       {accountActionLoading ? 'Sending...' : 'Update Email'}
@@ -514,7 +526,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                 </div>
               ) : accountSubView === 'change_password' ? (
                 /* Subview: Change Password */
-                <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
                     <KeyRound size={16} color="var(--flame)" />
                     <span>Change password</span>
@@ -526,12 +538,13 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     onChange={(e) => setNewPassword(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '10px 12px',
+                      padding: '10px 14px',
                       background: 'var(--bg-card)',
                       border: '1px solid var(--border)',
-                      borderRadius: 10,
+                      borderRadius: 'var(--radius-input)',
                       color: 'var(--text-primary)',
-                      fontSize: 13,
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 14,
                     }}
                   />
                   <input
@@ -541,12 +554,13 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '10px 12px',
+                      padding: '10px 14px',
                       background: 'var(--bg-card)',
                       border: '1px solid var(--border)',
-                      borderRadius: 10,
+                      borderRadius: 'var(--radius-input)',
                       color: 'var(--text-primary)',
-                      fontSize: 13,
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 14,
                     }}
                   />
                   {accountError && <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{accountError}</p>}
@@ -556,13 +570,16 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       onClick={() => { setAccountSubView('main'); setAccountError(null); }}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: 8,
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-button)',
                         background: 'var(--bg-card)',
                         border: '1px solid var(--border)',
                         color: 'var(--text-secondary)',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: 13,
+                        fontWeight: 500,
                         cursor: 'pointer',
+                        transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       Cancel
@@ -573,14 +590,16 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       onClick={handleChangePassword}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: 8,
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-button)',
                         background: 'var(--flame)',
-                        border: 'none',
-                        color: '#fff',
+                        border: '1px solid var(--flame)',
+                        color: '#ffffff',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: 13,
                         fontWeight: 600,
                         cursor: accountActionLoading ? 'not-allowed' : 'pointer',
+                        transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       {accountActionLoading ? 'Updating...' : 'Update Password'}
@@ -589,7 +608,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                 </div>
               ) : accountSubView === 'disconnect_google' ? (
                 /* Subview: Disconnect Google */
-                <div style={{ background: 'var(--bg)', border: '1px solid rgba(225, 29, 72, 0.2)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ background: 'var(--bg)', border: '1px solid var(--red-border)', borderRadius: 'var(--radius-card)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--red)' }}>
                     <Unlink size={16} />
                     <span>Disconnect Google sign-in</span>
@@ -604,13 +623,16 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       onClick={() => { setAccountSubView('main'); setAccountError(null); }}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: 8,
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-button)',
                         background: 'var(--bg-card)',
                         border: '1px solid var(--border)',
                         color: 'var(--text-secondary)',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: 13,
+                        fontWeight: 500,
                         cursor: 'pointer',
+                        transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       Cancel
@@ -621,14 +643,16 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       onClick={handleDisconnectGoogle}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: 8,
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-button)',
                         background: 'var(--red)',
-                        border: 'none',
-                        color: '#fff',
+                        border: '1px solid var(--red)',
+                        color: '#ffffff',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: 13,
                         fontWeight: 600,
                         cursor: accountActionLoading ? 'not-allowed' : 'pointer',
+                        transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       {accountActionLoading ? 'Disconnecting...' : 'Disconnect'}
@@ -637,7 +661,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                 </div>
               ) : accountSubView === 'delete_confirm' ? (
                 /* Subview: Delete Account Countdown */
-                <div style={{ background: 'var(--bg)', border: '1px solid rgba(225, 29, 72, 0.3)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ background: 'var(--bg)', border: '1px solid var(--red-border)', borderRadius: 'var(--radius-card)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--red)' }}>
                     <Trash2 size={16} />
                     <span>Permanent Account Deletion</span>
@@ -652,13 +676,16 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       onClick={() => { setAccountSubView('main'); setDeleteCountdown(10); setAccountError(null); }}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: 8,
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-button)',
                         background: 'var(--bg-card)',
                         border: '1px solid var(--border)',
                         color: 'var(--text-secondary)',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: 13,
+                        fontWeight: 500,
                         cursor: 'pointer',
+                        transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       Cancel
@@ -669,14 +696,16 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       onClick={handleConfirmDeleteAccount}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: 8,
-                        background: deleteCountdown > 0 ? 'rgba(225, 29, 72, 0.2)' : 'var(--red)',
-                        border: 'none',
-                        color: '#fff',
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-button)',
+                        background: deleteCountdown > 0 ? 'var(--red-subtle)' : 'var(--red)',
+                        border: `1px solid ${deleteCountdown > 0 ? 'var(--red-border)' : 'var(--red)'}`,
+                        color: deleteCountdown > 0 ? 'var(--red)' : '#ffffff',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: 13,
                         fontWeight: 600,
                         cursor: deleteCountdown > 0 || accountActionLoading ? 'not-allowed' : 'pointer',
+                        transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       {deleteCountdown > 0 ? `Wait ${deleteCountdown}s` : accountActionLoading ? 'Deleting...' : 'Delete Account'}
@@ -690,17 +719,19 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     type="button"
                     onClick={() => { setAccountSubView('change_email'); setAccountError(null); }}
                     style={{
-                      padding: '11px 14px',
-                      borderRadius: 10,
+                      padding: '12px 14px',
+                      borderRadius: 'var(--radius-button)',
                       background: 'var(--bg)',
                       border: '1px solid var(--border)',
                       color: 'var(--text-primary)',
                       fontSize: 13,
+                      fontFamily: 'var(--font-sans)',
                       fontWeight: 500,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       cursor: 'pointer',
+                      transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -714,17 +745,19 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     type="button"
                     onClick={() => { setAccountSubView('change_password'); setAccountError(null); }}
                     style={{
-                      padding: '11px 14px',
-                      borderRadius: 10,
+                      padding: '12px 14px',
+                      borderRadius: 'var(--radius-button)',
                       background: 'var(--bg)',
                       border: '1px solid var(--border)',
                       color: 'var(--text-primary)',
                       fontSize: 13,
+                      fontFamily: 'var(--font-sans)',
                       fontWeight: 500,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       cursor: 'pointer',
+                      transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -739,17 +772,19 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                       type="button"
                       onClick={() => { setAccountSubView('disconnect_google'); setAccountError(null); }}
                       style={{
-                        padding: '11px 14px',
-                        borderRadius: 10,
+                        padding: '12px 14px',
+                        borderRadius: 'var(--radius-button)',
                         background: 'var(--bg)',
                         border: '1px solid var(--border)',
                         color: 'var(--text-primary)',
                         fontSize: 13,
+                        fontFamily: 'var(--font-sans)',
                         fontWeight: 500,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         cursor: 'pointer',
+                        transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -764,17 +799,19 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     type="button"
                     onClick={signOut}
                     style={{
-                      padding: '11px 14px',
-                      borderRadius: 10,
+                      padding: '12px 14px',
+                      borderRadius: 'var(--radius-button)',
                       background: 'var(--bg)',
                       border: '1px solid var(--border)',
                       color: 'var(--text-primary)',
                       fontSize: 13,
+                      fontFamily: 'var(--font-sans)',
                       fontWeight: 500,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       cursor: 'pointer',
+                      transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -787,18 +824,20 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                     type="button"
                     onClick={() => { setAccountSubView('delete_confirm'); setDeleteCountdown(10); setAccountError(null); }}
                     style={{
-                      padding: '11px 14px',
-                      borderRadius: 10,
-                      background: 'rgba(225, 29, 72, 0.08)',
-                      border: '1px solid rgba(225, 29, 72, 0.2)',
+                      padding: '12px 14px',
+                      borderRadius: 'var(--radius-button)',
+                      background: 'var(--red-subtle)',
+                      border: '1px solid var(--red-border)',
                       color: 'var(--red)',
                       fontSize: 13,
+                      fontFamily: 'var(--font-sans)',
                       fontWeight: 500,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       cursor: 'pointer',
                       marginTop: 4,
+                      transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -824,11 +863,11 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
               }}
             >
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(249, 115, 22, 0.12)', color: 'var(--flame)', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
+                <div style={{ width: 56, height: 56, borderRadius: 'var(--radius-card)', background: 'var(--flame-subtle)', border: '1px solid var(--flame-border)', color: 'var(--flame)', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
                   <Flame size={32} strokeWidth={2} />
                 </div>
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Spark</h3>
-                <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, margin: 0 }}>Version 1.0.0</p>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, margin: 0 }}>Version 1.0</p>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -837,16 +876,18 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                   onClick={handleCopyEmail}
                   style={{
                     padding: '12px 14px',
-                    borderRadius: 10,
+                    borderRadius: 'var(--radius-button)',
                     background: 'var(--bg)',
                     border: '1px solid var(--border)',
                     color: 'var(--text-primary)',
                     fontSize: 13,
+                    fontFamily: 'var(--font-sans)',
                     fontWeight: 500,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
+                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -861,16 +902,18 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                   onClick={() => setShowTerms(true)}
                   style={{
                     padding: '12px 14px',
-                    borderRadius: 10,
+                    borderRadius: 'var(--radius-button)',
                     background: 'var(--bg)',
                     border: '1px solid var(--border)',
                     color: 'var(--text-primary)',
                     fontSize: 13,
+                    fontFamily: 'var(--font-sans)',
                     fontWeight: 500,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
+                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -885,16 +928,18 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                   onClick={() => window.open('https://github.com/ZadniproIon/spark-web', '_blank', 'noopener,noreferrer')}
                   style={{
                     padding: '12px 14px',
-                    borderRadius: 10,
+                    borderRadius: 'var(--radius-button)',
                     background: 'var(--bg)',
                     border: '1px solid var(--border)',
                     color: 'var(--text-primary)',
                     fontSize: 13,
+                    fontFamily: 'var(--font-sans)',
                     fontWeight: 500,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
+                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -908,7 +953,7 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                   style={{
                     background: 'var(--bg)',
                     border: '1px solid var(--border)',
-                    borderRadius: 12,
+                    borderRadius: 'var(--radius-card)',
                     padding: '12px 14px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -922,22 +967,22 @@ export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
                     <span style={{ color: 'var(--text-primary)' }}>New note</span>
-                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>N</kbd>
+                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-button)', padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>N</kbd>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
                     <span style={{ color: 'var(--text-primary)' }}>Toggle search</span>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>/</kbd>
-                      <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl K</kbd>
+                      <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-button)', padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>/</kbd>
+                      <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-button)', padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl K</kbd>
                     </div>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
                     <span style={{ color: 'var(--text-primary)' }}>Save note</span>
-                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl Enter</kbd>
+                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-button)', padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Ctrl Enter</kbd>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
                     <span style={{ color: 'var(--text-primary)' }}>Close / dismiss</span>
-                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Esc</kbd>
+                    <kbd style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-button)', padding: '2px 7px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>Esc</kbd>
                   </div>
                 </div>
               </div>

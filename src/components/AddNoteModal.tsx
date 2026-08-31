@@ -155,40 +155,41 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                 type="button"
                 title="Record voice note"
                 style={{
+                  width: '42px',
+                  height: '42px',
                   background: 'var(--bg-card)',
                   border: '1px solid var(--border)',
-                  borderRadius: '12px',
-                  padding: '12px',
-                  fontSize: '16px',
+                  borderRadius: 'var(--radius-button)',
                   color: 'var(--text-primary)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'background-color 150ms ease, border-color 150ms ease',
+                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: 'var(--shadow-1)',
                 }}
               >
-                <Mic size={20} />
+                <Mic size={19} />
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <button
                   onClick={handleClose}
                   type="button"
                   style={{
                     background: 'var(--bg-card)',
                     border: '1px solid var(--border)',
-                    borderRadius: '12px',
-                    padding: '12px 16px',
-                    fontSize: '16px',
-                    fontFamily: 'Inter, var(--font-sans)',
-                    fontWeight: 400,
+                    borderRadius: 'var(--radius-button)',
+                    padding: '10px 16px',
+                    fontSize: '14px',
+                    fontFamily: 'var(--font-sans)',
+                    fontWeight: 500,
                     color: 'var(--text-primary)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transition: 'background-color 150ms ease, border-color 150ms ease',
+                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   Cancel
@@ -198,20 +199,20 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                   disabled={!content.trim()}
                   type="button"
                   style={{
-                    background: 'var(--bg-card)',
+                    background: 'var(--flame)',
                     border: '1px solid var(--flame)',
-                    borderRadius: '12px',
-                    padding: '12px 16px',
-                    fontSize: '16px',
-                    fontFamily: 'Inter, var(--font-sans)',
-                    fontWeight: 400,
-                    color: 'var(--flame)',
+                    borderRadius: 'var(--radius-button)',
+                    padding: '10px 18px',
+                    fontSize: '14px',
+                    fontFamily: 'var(--font-sans)',
+                    fontWeight: 600,
+                    color: '#ffffff',
                     cursor: content.trim() ? 'pointer' : 'not-allowed',
                     opacity: content.trim() ? 1 : 0.5,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transition: 'opacity 150ms ease',
+                    transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   Confirm
@@ -227,19 +228,20 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                 type="button"
                 title="Cancel recording"
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '34px',
+                  height: '34px',
                   borderRadius: '50%',
                   border: '1px solid var(--border)',
                   background: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
+                  color: 'var(--text-secondary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
+                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
               >
-                <X size={20} />
+                <X size={16} />
               </button>
 
               <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
@@ -252,20 +254,21 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                 type="button"
                 title="Confirm & save voice note"
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '34px',
+                  height: '34px',
                   borderRadius: '50%',
-                  border: '1px solid var(--border)',
-                  background: 'var(--bg-card)',
-                  color: (isPaused || duration > 0) ? 'var(--flame)' : 'var(--text-secondary)',
-                  opacity: (isPaused || duration > 0) ? 1 : 0.4,
+                  border: `1px solid ${isPaused || duration > 0 ? 'var(--flame)' : 'var(--border)'}`,
+                  background: isPaused || duration > 0 ? 'var(--flame)' : 'var(--bg-card)',
+                  color: isPaused || duration > 0 ? '#ffffff' : 'var(--text-secondary)',
+                  opacity: isPaused || duration > 0 ? 1 : 0.4,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: (isPaused || duration > 0) ? 'pointer' : 'not-allowed',
+                  cursor: isPaused || duration > 0 ? 'pointer' : 'not-allowed',
+                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
               >
-                <Check size={20} />
+                <Check size={16} />
               </button>
             </div>
 
@@ -322,13 +325,13 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                   borderRadius: '50%',
                   border: '1px solid var(--border)',
                   background: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
+                  color: isPaused ? 'var(--flame)' : 'var(--text-primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
                   boxShadow: 'var(--shadow-1)',
-                  transition: 'transform 100ms ease',
+                  transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
               >
                 {isPaused ? <Play size={24} /> : <Pause size={24} />}
@@ -355,10 +358,10 @@ export function AddNoteModal({ onClose, initialMode = 'text' }: AddNoteModalProp
                   width: '100%',
                   background: 'var(--bg-card)',
                   border: '1px solid var(--border)',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-input)',
                   padding: '10px 14px',
                   fontSize: '14px',
-                  fontFamily: 'DM Sans, var(--font-sans)',
+                  fontFamily: 'var(--font-sans)',
                   color: 'var(--text-primary)',
                   outline: 'none',
                   boxSizing: 'border-box',

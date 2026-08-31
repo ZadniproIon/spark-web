@@ -32,14 +32,14 @@ export function FloatingTopSearchBar({ onClose, resultCount }: FloatingTopSearch
           alignItems: 'center',
           gap: 10,
           width: 'min(100%, 460px)',
-          padding: '8px 14px',
+          padding: '10px 14px',
           background: 'var(--bg-card)',
           border: '1px solid var(--flame)',
-          borderRadius: '24px',
-          boxShadow: '0 8px 24px rgba(249, 115, 22, 0.12)',
+          borderRadius: 'var(--radius-search)',
+          boxShadow: '0 8px 24px var(--flame-subtle)',
         }}
       >
-        <Search size={17} color="var(--flame)" style={{ flexShrink: 0 }} />
+        <Search size={18} color="var(--flame)" style={{ flexShrink: 0 }} />
         <input
           ref={inputRef}
           type="text"
@@ -73,8 +73,8 @@ export function FloatingTopSearchBar({ onClose, resultCount }: FloatingTopSearch
               fontSize: 11,
               fontFamily: 'var(--font-mono)',
               padding: '2px 7px',
-              borderRadius: 8,
-              background: 'rgba(249, 115, 22, 0.12)',
+              borderRadius: 'var(--radius-button)',
+              background: 'var(--flame-subtle)',
               color: 'var(--flame)',
               fontWeight: 600,
               flexShrink: 0,
@@ -99,6 +99,7 @@ export function FloatingTopSearchBar({ onClose, resultCount }: FloatingTopSearch
             color: 'var(--text-secondary)',
             cursor: 'pointer',
             flexShrink: 0,
+            transition: 'all 180ms cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <X size={13} />
